@@ -1,1 +1,1 @@
-WIP
+# Full stack deployment handbook
