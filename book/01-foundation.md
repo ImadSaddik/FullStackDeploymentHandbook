@@ -335,6 +335,48 @@ Received disconnect from <your_droplet_ip> port 22:2: Too many authentication fa
 
 Both errors mean the same thing: The root account is now locked against remote login.
 
+### Simplify SSH access
+
+Typing the full SSH command with the key path and IP address every time is tedious. You can configure your local SSH client to remember these details for you.
+
+On your **local computer** (not the server), open or create the SSH config file:
+
+```bash
+nano ~/.ssh/config
+```
+
+Add the following configuration block at the bottom of the file:
+
+```text
+Host my-website
+    HostName <your_droplet_ip>
+    User <your_username>
+    IdentityFile ~/.ssh/<private_key_name>
+    IdentitiesOnly yes
+```
+
+Here is what these lines do:
+
+- **Host:** This is the shortcut name you want to use.
+- **HostName:** The actual IP address of your server.
+- **User:** The username you created on the server.
+- **IdentityFile:** The path to the specific private key for this server.
+- **IdentitiesOnly:** This tells SSH to **only** use the specific key file listed here. This prevents the "Too many authentication failures" error if you have many keys on your computer.
+
+Save the file and exit. Now, instead of typing this long command:
+
+```bash
+ssh -i ~/.ssh/<private_key_name> <your_username>@<your_droplet_ip>
+```
+
+You can simply type:
+
+```bash
+ssh my-website
+```
+
+Your computer will automatically look up the IP, user, and key, and log you straight in.
+
 ### What is next?
 
 You have successfully configured a clean Ubuntu server and secured it with SSH keys. However, your server is still exposed to the open internet.
