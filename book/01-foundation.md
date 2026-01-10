@@ -69,32 +69,32 @@ Select **SSH Key** and click on the **Add SSH Key** button.
 ![image](./images/1_1_9_authentication.png)
 _Select SSH key for better security._
 
-To generate a key, open your terminal on your local computer and run this command:
+To generate a key, open your terminal on your local computer. You will use the [Ed25519](https://en.wikipedia.org/wiki/EdDSA#Ed25519) algorithm. It is more secure and faster than the older RSA standard.
 
 ```bash
-ssh-keygen -t rsa -b 4096 -f ~/.ssh/<your_key_name> -C "<key_comment>"
+ssh-keygen -t ed25519 -f ~/.ssh/<your_key_name> -C "<key_comment>"
 ```
 
 Here is what the arguments do:
 
-- `-t rsa`: Specifies the type of cryptography ([RSA](https://en.wikipedia.org/wiki/RSA_cryptosystem)).
-- `-b 4096`: Generates a strong 4096-bit key.
+- `-t ed25519`: Specifies the modern Ed25519 algorithm.
 - `-f ~/.ssh/<your_key_name>`: Saves the key with a specific name so you don’t overwrite your default keys.
 - `-C "<key_comment>"`: Adds a comment to help you identify the key.
 
 You will be asked to add a **passphrase**. This is an extra password to protect your private key. If someone steals your private key file, they cannot use it without this passphrase.
 
 ```bash
-ssh-keygen -t rsa -b 4096 -f ~/.ssh/<your_key_name> -C "<key_comment>"
+ssh-keygen -t ed25519 -f ~/.ssh/<your_key_name> -C "<key_comment>"
 
 # Output:
-Generating public/private rsa key pair.
+Generating public/private ed25519 key pair.
 Enter passphrase for "/home/<your_username>/.ssh/<your_key_name>" (empty for no passphrase):
 ```
 
-If you do not want to use a passphrase, press **Enter** twice. If you do add one, remember that you will need to enter it every time you log in to the VM.
+I strongly recommend adding a passphrase for your personal key.
 
-This is fine for manual login. However, if you have a **CI workflow** that needs to log in automatically, it is better not to set a passphrase.
+> [!NOTE]
+> If you need a key for a CI/CD pipeline later (to deploy code automatically), generate a separate key pair without a passphrase. Never remove the passphrase from your personal key.
 
 You have generated the key pair. Now, copy the public key.
 
@@ -102,7 +102,7 @@ You have generated the key pair. Now, copy the public key.
 cat ~/.ssh/<your_key_name>.pub
 ```
 
-The command displays your public key. Copy the entire text starting with `ssh-rsa`. Paste it into the box, give it a name, and click **Add SSH Key**.
+The command displays your public key. Copy the entire text starting with `ssh-ed25519`. Paste it into the box, give it a name, and click **Add SSH Key**.
 
 ![image](./images/1_1_10_adding_a_public_key.png)
 _Add the public SSH key._
