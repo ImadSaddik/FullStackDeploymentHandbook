@@ -277,6 +277,14 @@ See "man sudo_root" for details.
 <your_username>@<your_hostname>:~$
 ```
 
+Before you move on to the next step, you must verify that your new user can actually perform administrative tasks. If you disable root login and find out your user cannot use sudo, you will be locked out of your own server.
+
+```bash
+sudo ls /root
+```
+
+If the command works, you will see the contents of the root directory. If you get an error saying your user is "not in the sudoers file", **STOP**. Do not disable root login until you fix the user permissions.
+
 From now on, you will stop using `root` and use this account instead.
 
 ### Disable root SSH access
