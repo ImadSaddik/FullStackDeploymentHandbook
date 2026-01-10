@@ -145,7 +145,7 @@ Use the SSH command to connect to the machine. Pass your private key using the `
 ssh -i ~/.ssh/<your_key_name> root@<your_droplet_ip>
 ```
 
-You will see a security warning about the authenticity of host. Type `yes` and hit **Enter** to continue.
+You will see a security warning about the authenticity of host. Type `yes` and hit `Enter` to continue.
 
 ```text
 The authenticity of host '<your_droplet_ip> (<your_droplet_ip>)' can't be established.
@@ -210,7 +210,7 @@ Create a new user to act as a security barrier.
 adduser <your_username>
 ```
 
-You will be asked to set a password and fill in some details. You can skip the details by pressing **Enter**.
+You will be asked to set a password and fill in some details. You can skip the details by pressing `Enter`.
 
 ```text
 New password:
