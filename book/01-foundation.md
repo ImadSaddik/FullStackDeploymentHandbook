@@ -20,7 +20,7 @@ _The location of the **+ New Project** button on the DigitalOcean dashboard._
 Give your project a name and a description. Choose a **descriptive** name so you can remember the purpose of the project later. I named mine “imad-saddik”. Click on **Create Project** when you are done.
 
 ![image](./images/1_1_2_information_about_project_step_1.png)
-Give the project a name and a description._
+_Give the project a name and a description._
 
 DigitalOcean will ask if you want to move resources to this project. Click **Skip for now** because you are starting from scratch.
 
