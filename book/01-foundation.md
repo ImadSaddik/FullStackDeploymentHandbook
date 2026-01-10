@@ -252,7 +252,7 @@ Log back in as **root**.
 ssh -i ~/.ssh/<private_key_name> root@<your_droplet_ip>
 ```
 
-Run these commands to copy the authorized keys to the new user.
+Run these commands to copy the authorized keys to the new user. You cannot just copy the files; you must also set strict permissions on the `.ssh` directory and its contents.
 
 ```bash
 # Create the .ssh directory
