@@ -17,7 +17,7 @@ After creating your account, create a project to hold your resources. Click on t
 ![image](./images/1_1_1_create_new_project_inkscape.png)
 _The location of the **+ New Project** button on the DigitalOcean dashboard._
 
-Give your project a name and a description. Write something expressive so you can remember the purpose of the project later. I named mine “imad-saddik”. Click on **Create Project** when you are done.
+Give your project a name and a description. Choose a **descriptive** name so you can remember the purpose of the project later. I named mine “imad-saddik”. Click on **Create Project** when you are done.
 
 ![image](./images/1_1_2_information_about_project_step_1.png)
 Give the project a name and a description._
@@ -55,12 +55,12 @@ The good thing is that you can **change the droplet size later** if needed. For 
 ![image](./images/1_1_7_choose_size.png)
 _Select the droplet size that fits your needs._
 
-If you need more storage, click **Add Volume** and enter the size in GB. This feature is not free, it costs **$1 per month for every 10 GB**. You can also enable automatic backups if you need them.
+If you need more storage, click **Add Volume** and enter the size in GB. This feature is not free; it costs **$1 per month for every 10 GB**. You can also enable automatic backups if you need them.
 
 ![image](./images/1_1_8_space_and_backup.png)
 _Additional storage and backup options._
 
-### Authentication
+### Configure authentication
 
 This is a critical security step. You can access your server using a **Password** or an **SSH key**. **Always use an SSH key.** Passwords can be guessed, but SSH keys are much safer.
 
@@ -198,7 +198,7 @@ Reboot the machine to complete the upgrade and start using the new kernel and pa
 reboot
 ```
 
-You will be kicked out of the server, but you can ssh to it after it reboots. If you want to exit the VM, type exit and hit `Enter` or hit `Ctrl+D`.
+The connection will close, but you can ssh to the server again after it reboots. If you want to exit the VM, type exit and hit `Enter` or hit `Ctrl+D`.
 
 ### Create a non-root user and configure SSH access
 
