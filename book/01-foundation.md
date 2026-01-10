@@ -306,7 +306,7 @@ PermitRootLogin no
 PasswordAuthentication no
 ```
 
-Save the file by pressing `Ctrl+S`, then exit nano with `Ctrl+X`. After that, restart the SSH service to apply the changes.
+Save the file by pressing `Ctrl+O` (to write out/save), then exit nano with `Ctrl+X`. After that, restart the SSH service to apply the changes.
 
 ```bash
 sudo systemctl restart ssh
