@@ -199,3 +199,85 @@ reboot
 ```
 
 You will be kicked out of the server, but you can ssh to it after it reboots. If you want to exit the VM, type exit and hit `Enter` or hit `Ctrl+D`.
+
+### Create a non-root user and configure SSH access
+
+Running everything as **root** is dangerous. If you make a mistake, it might be unrecoverable. Also, if an attacker finds a vulnerability in your app while it is running as root, they gain full control of your server.
+
+Create a new user to act as a security barrier.
+
+```bash
+adduser <your_username>
+```
+
+You will be asked to set a password and fill in some details. You can skip the details by pressing **Enter**.
+
+```text
+New password:
+Retype new password:
+passwd: password updated successfully
+Changing the user information for <your_username>
+Enter the new value, or press ENTER for the default
+Full Name []: <your_fullname>
+Room Number []:
+Work Phone []:
+Home Phone []:
+Other []:
+Is the information correct? [Y/n] y
+info: Adding new user `<your_username>' to supplemental / extra groups `users' ...
+info: Adding user `<your_username>' to group `users' ...
+```
+
+Give the new user administrative privileges ([sudo](https://www.sudo.ws/news/)).
+
+```bash
+usermod -aG sudo <your_username>
+```
+
+Now, log out of the server (`exit` or `Ctrl+D`) and try to log in as your new user.
+
+```bash
+ssh -i ~/.ssh/<private_key_name> <your_username>@<your_droplet_ip>
+```
+
+You will get an error. This happens because the SSH key you authorized exists only in the `root` user's list. The new user (`<your_username>`) has an empty list. You need to copy the key from `root` to `<your_username>`.
+
+```text
+<your_username>@<your_droplet_ip>: Permission denied (publickey).
+```
+
+Log back in as **root**.
+
+```bash
+ssh -i ~/.ssh/<private_key_name> root@<your_droplet_ip>
+```
+
+Run these commands to copy the authorized keys to the new user.
+
+```bash
+# Create the .ssh directory
+mkdir /home/<your_username>/.ssh
+
+# Copy the file
+cp /root/.ssh/authorized_keys /home/<your_username>/.ssh/authorized_keys
+
+# Give the new user ownership of this directory
+chown -R <your_username>:<your_username> /home/<your_username>/.ssh
+```
+
+Now, exit and try to log in as your new user again.
+
+```bash
+ssh -i ~/.ssh/<private_key_name> <your_username>@<your_droplet_ip>
+```
+
+It should work now. You will see a prompt like this:
+
+```text
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+<your_username>@<your_hostname>:~$
+```
+
+From now on, you will stop using `root` and use this account instead.
