@@ -296,13 +296,14 @@ Open the SSH configuration file:
 sudo nano /etc/ssh/sshd_config
 ```
 
-Find the line `PermitRootLogin yes` and change it to `no`.
+Find the line `PermitRootLogin yes` and change it to `no`. Also, find the line `PasswordAuthentication yes` and change it to `no`. This explicitly forces the server to use SSH keys and reject all password login attempts.
 
 > [!TIP]
 > To search in nano, press `Ctrl+W`, type the search term, and hit `Enter`.
 
 ```text
 PermitRootLogin no
+PasswordAuthentication no
 ```
 
 Save the file by pressing `Ctrl+S`, then exit nano with `Ctrl+X`. After that, restart the SSH service to apply the changes.
@@ -334,6 +335,30 @@ Received disconnect from <your_droplet_ip> port 22:2: Too many authentication fa
 ```
 
 Both errors mean the same thing: The root account is now locked against remote login.
+
+> [!NOTE]
+> Setting `PasswordAuthentication no` is optional because DigitalOcean already disabled password authentication when you created the droplet (assuming you selected SSH key authentication)
+>
+> However, it is good practice to set it manually to ensure your server remains secure even if you move it to another provider or disable the cloud setup scripts.
+>
+> Modern Linux services (like SSH, Nginx, and APT) use a "drop-in" configuration system. They read the main config file first, then look for a folder ending in `.d` (e.g., `/etc/ssh/sshd_config.d/`) and load those files in alphabetical order. The **last file read wins**.
+>
+> You can see this "hidden" security rule by running this command:
+>
+> ```bash
+> grep -r "PasswordAuthentication" /etc/ssh/sshd_config.d/
+> ```
+>
+> You will see something like this:
+>
+> ```text
+> /etc/ssh/sshd_config.d/50-cloud-init.conf:PasswordAuthentication no
+> /etc/ssh/sshd_config.d/60-cloudimg-settings.conf:PasswordAuthentication no
+> ```
+>
+> DigitalOcean's setup script created that file to protect you automatically.
+>
+> So why did we edit the main file? Because you should never rely on a cloud provider's script for your core security. If you ever move this server to another provider (like AWS or a physical server), that 50-cloud-init.conf won't exist. By explicitly setting it in the main `sshd_config`, you ensure your server is secure forever, no matter where it runs.
 
 ### Simplify SSH access
 
