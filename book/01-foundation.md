@@ -22,7 +22,7 @@ Give your project a name and a description. Choose a **descriptive** name so you
 ![image](./images/1_1_2_information_about_project_step_1.png)
 _Give the project a name and a description._
 
-DigitalOcean will ask if you want to move resources to this project. Click **Skip for now** because you are starting from scratch.
+DigitalOcean will ask if you want to move resources to this project. Click **Skip for now** since you are starting from scratch.
 
 ![image](./images/1_1_3_information_about_project_step_2.png)
 _Skip this step because you don’t have any resources yet._
@@ -36,7 +36,7 @@ A droplet is a Linux-based virtual machine that runs on virtualized hardware. Th
 ![image](./images/1_1_4_create_droplet_inkscape.jpg)
 _Click **Create**, then select **droplets** to start setting up your server._
 
-Choose a **Region** where your VM will be hosted. Always select a region that is geographically near you or your target users. I live in Morocco, so I chose the Frankfurt (Germany) datacenter.
+Choose a **Region** where your VM will be hosted. Always select a region geographically near you or your target users. I live in Morocco, so I chose the Frankfurt (Germany) datacenter.
 
 ![image](./images/1_1_5_choose_region.png)
 _Select the region where your droplet will be hosted._
@@ -50,26 +50,26 @@ Now you need to choose the size of your virtual machine. You can pick between **
 
 Dedicated VMs are more expensive because the resources are **reserved only for you**. Adding more RAM, disk space, or CPU cores will also increase the price.
 
-The good thing is that you can **change the droplet size later** if needed. For now, you will create a droplet with a shared CPU and the lowest resources. This costs **$4 per month**, and I will show you how to upgrade it later.
+Fortunately, you can **change the droplet size later** if needed. For now, you will create a droplet with a shared CPU and the lowest resources. This costs **$4 per month**, and I will show you how to upgrade it later.
 
 ![image](./images/1_1_7_choose_size.png)
 _Select the droplet size that fits your needs._
 
-If you need more storage, click **Add Volume** and enter the size in GB. This feature is not free; it costs **$1 per month for every 10 GB**. You can also enable automatic backups if you need them.
+If you need more storage, click **Add Volume** and enter the size in GB. This feature is not free; it costs **$1 per month per 10 GB**. You can also enable automatic backups if you need them.
 
 ![image](./images/1_1_8_space_and_backup.png)
 _Additional storage and backup options._
 
 ### Configure authentication
 
-This is a critical security step. You can access your server using a **Password** or an **SSH key**. **Always use an SSH key.** Passwords can be guessed, but SSH keys are much safer.
+This is a critical security step. You can access your server using a **password** or an **SSH key**. **Always use an SSH key.** Passwords are vulnerable to brute-force attacks, whereas SSH keys are significantly more secure.
 
 Select **SSH Key** and click on the **Add SSH Key** button.
 
 ![image](./images/1_1_9_authentication.png)
 _Select SSH key for better security._
 
-To generate a key, open your terminal on your local computer. You will use the [Ed25519](https://en.wikipedia.org/wiki/EdDSA#Ed25519) algorithm. It is more secure and faster than the older RSA standard.
+To generate a key, open the terminal on your local computer. You will use the [Ed25519](https://en.wikipedia.org/wiki/EdDSA#Ed25519) algorithm, which is faster and more secure than the older RSA standard.
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/<your_key_name> -C "<key_comment>"
@@ -154,7 +154,7 @@ This key is not known by any other names.
 Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
-Sometimes, the server is not fully ready even though it says "Running". If you see a **Connection closed** message immediately after typing yes, don’t worry.
+Sometimes, the server is not fully ready even though the status says "Running". If you see a **Connection closed** message immediately after typing yes, don’t worry.
 
 If this happens, just wait a few seconds and run the SSH command again. It should work the second time.
 
@@ -198,7 +198,7 @@ Reboot the machine to complete the upgrade and start using the new kernel and pa
 reboot
 ```
 
-The connection will close, but you can ssh to the server again after it reboots. If you want to exit the VM, type exit and hit `Enter` or hit `Ctrl+D`.
+The connection will close, but you can connect via SSH to the server again after it reboots. If you want to exit the VM, type exit and hit `Enter` or hit `Ctrl+D`.
 
 ### Create a non-root user and configure SSH access
 
@@ -234,13 +234,13 @@ Give the new user administrative privileges ([sudo](https://www.sudo.ws/news/)).
 usermod -aG sudo <your_username>
 ```
 
-Now, log out of the server (`exit` or `Ctrl+D`) and try to log in as your new user.
+Now, log out of the server (`exit` or `Ctrl+D`) and attempt to log in as your new user.
 
 ```bash
 ssh -i ~/.ssh/<private_key_name> <your_username>@<your_droplet_ip>
 ```
 
-You will get an error. This happens because the SSH key you authorized exists only in the `root` user's list. The new user (`<your_username>`) has an empty list. You need to copy the key from `root` to `<your_username>`.
+You will get an error. This happens because the SSH key you authorized exists only in the `root` user's authorized_keys file. The new user (`<your_username>`) has an empty list. You need to copy the key from `root` to `<your_username>`.
 
 ```text
 <your_username>@<your_droplet_ip>: Permission denied (publickey).
