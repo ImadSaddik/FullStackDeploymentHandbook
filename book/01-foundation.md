@@ -286,6 +286,55 @@ See "man sudo_root" for details.
 
 From now on, you will stop using `root` and use this account instead.
 
+### Disable root SSH access
+
+Now that your new user is set up, you should disable direct login for the root account. This reduces your attack surface.
+
+Open the SSH configuration file:
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+Find the line `PermitRootLogin yes` and change it to `no`.
+
+> [!TIP]
+> To search in nano, press `Ctrl+W`, type the search term, and hit `Enter`.
+
+```text
+PermitRootLogin no
+```
+
+Save the file by pressing `Ctrl+S`, then exit nano with `Ctrl+X`. After that, restart the SSH service to apply the changes.
+
+```bash
+sudo systemctl restart ssh
+```
+
+Now, exit the server.
+
+```bash
+exit
+```
+
+Try to log in as `root`.
+
+```bash
+ssh -i ~/.ssh/<private_key_name> root@<your_droplet_ip>
+```
+
+You should see a message indicating that authentication was rejected. Depending on your local SSH configuration, you will see one of these two errors:
+
+```text
+# Scenario A: Standard rejection
+Permission denied (publickey).
+
+# Scenario B: If you have many SSH keys on your computer
+Received disconnect from <your_droplet_ip> port 22:2: Too many authentication failures
+```
+
+Both errors mean the same thing: The root account is now locked against remote login.
+
 ### What is next?
 
 You have successfully configured a clean Ubuntu server and secured it with SSH keys. However, your server is still exposed to the open internet.
