@@ -116,3 +116,86 @@ You are almost done. Select **Add improved metrics monitoring and alerting** bec
 
 ![image](./images/1_1_12_advanced_options.png)
 _Select the free monitoring option._
+
+### Finalize and connect
+
+Give your droplet a name you can recognize, add tags, and assign it to the project you created. You can deploy multiple droplets, but for now, keep the quantity set to **1 droplet**.
+
+![image](./images/1_1_13_final_step_before_creating_droplet.png)
+_Fill the finalize details section._
+
+Click on **Create droplet**. You will be redirected to the project page. Under **Resources**, you should see a **green dot** next to your droplet. This means it is running.
+
+![image](./images/1_1_14_droplet_in_project_page.png)
+_Ensure that the droplet is running and assigned to the project._
+
+Later, if you find that this VM cannot handle the traffic, you can click on **Upsize** to add more resources.
+
+![image](./images/1_1_15_upsize_droplet.png)
+_Increase resources by upsizing._
+
+You are now ready to connect to your VM. Find the **IP address** on the project page.
+
+![image](./images/1_1_16_find_ip_address.png)
+_Locate the IP address of the VM._
+
+Use the SSH command to connect to the machine. Pass your private key using the `-i` flag and add your IP address after `root@`.
+
+```bash
+ssh -i ~/.ssh/<your_key_name> root@<your_droplet_ip>
+```
+
+You will see a security warning about the authenticity of host. Type `yes` and hit **Enter** to continue.
+
+```text
+The authenticity of host '<your_droplet_ip> (<your_droplet_ip>)' can't be established.
+ED25519 key fingerprint is SHA256:...
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+```
+
+Sometimes, the server is not fully ready even though it says "Running". If you see a **Connection closed** message immediately after typing yes, don’t worry.
+
+If this happens, just wait a few seconds and run the SSH command again. It should work the second time.
+
+```text
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '<your_droplet_ip>' (ED69696) to the list of known hosts.
+Connection closed by <your_droplet_ip> port 22
+```
+
+Once connected, you will see a welcome message similar to this:
+
+```text
+*** System restart required ***
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+root@<your_hostname>:~#
+```
+
+Update your VM packages by running the following commands:
+
+```bash
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+> [!IMPORTANT]
+> If you see a configuration screen during the update, select **keep the local version currently installed**. This option ensures you keep the working SSH configuration that DigitalOcean set up for you.
+
+![image](./images/1_1_17_configure_open_ssh_server_warning.png)
+_Handle the configuration conflict._
+
+Reboot the machine to complete the upgrade and start using the new kernel and packages.
+
+```bash
+reboot
+```
+
+You will be kicked out of the server, but you can ssh to it after it reboots. If you want to exit the VM, type exit and hit `Enter` or hit `Ctrl+D`.
