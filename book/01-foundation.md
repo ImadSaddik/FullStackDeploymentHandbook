@@ -182,8 +182,8 @@ root@<your_hostname>:~#
 Update your VM packages by running the following commands:
 
 ```bash
-sudo apt-get update
-sudo apt-get upgrade
+sudo apt update
+sudo apt upgrade
 ```
 
 > [!IMPORTANT]
