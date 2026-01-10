@@ -252,18 +252,11 @@ Log back in as **root**.
 ssh -i ~/.ssh/<private_key_name> root@<your_droplet_ip>
 ```
 
-Run these commands to copy the authorized keys to the new user. You cannot just copy the files; you must also set strict permissions on the `.ssh` directory and its contents.
+Run these commands to copy the authorized keys to the new user. You will copy the entire directory and preserve the strict root permissions using the `--preserve=mode` flag.
 
 ```bash
-# Create the .ssh directory
-mkdir /home/<your_username>/.ssh
-
-# Copy the file
-cp /root/.ssh/authorized_keys /home/<your_username>/.ssh/authorized_keys
-
-# Set strict permissions
-chmod 700 /home/<your_username>/.ssh
-chmod 600 /home/<your_username>/.ssh/authorized_keys
+# Copy the .ssh directory, preserving the strict file permissions
+cp -r --preserve=mode /root/.ssh /home/<your_username>/
 
 # Give the new user ownership of this directory
 chown -R <your_username>:<your_username> /home/<your_username>/.ssh
