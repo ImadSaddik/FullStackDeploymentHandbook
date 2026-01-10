@@ -261,6 +261,10 @@ mkdir /home/<your_username>/.ssh
 # Copy the file
 cp /root/.ssh/authorized_keys /home/<your_username>/.ssh/authorized_keys
 
+# Set strict permissions
+chmod 700 /home/<your_username>/.ssh
+chmod 600 /home/<your_username>/.ssh/authorized_keys
+
 # Give the new user ownership of this directory
 chown -R <your_username>:<your_username> /home/<your_username>/.ssh
 ```
