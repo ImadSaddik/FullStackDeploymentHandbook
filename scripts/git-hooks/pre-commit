@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Redirect stdout/stderr to terminal to make sure user sees messages
+exec 1>&2
+
+# Check if libreoffice is installed
+if ! command -v libreoffice &> /dev/null; then
+    echo "Warning: libreoffice not found. Skipping PDF generation."
+    exit 0
+fi
+
+# Loop through all staged .odp files
+git diff --cached --name-only --diff-filter=ACM | grep '\.odp$' | while read -r file; do
+    echo "Detected change in $file. Generating PDF"
+    
+    # Convert
+    outdir=$(dirname "$file")
+    libreoffice --headless --convert-to pdf "$file" --outdir "$outdir"
+    
+    if [ $? -eq 0 ]; then
+        # Add the generated PDF to staging area
+        pdf_file="${file%.odp}.pdf"
+        echo "PDF generated: $pdf_file"
+        git add "$pdf_file"
+    else
+        echo "Failed to generate PDF for $file"
+        exit 1
+    fi
+done
