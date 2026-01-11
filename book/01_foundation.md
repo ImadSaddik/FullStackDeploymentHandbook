@@ -119,7 +119,7 @@ _Add the public SSH key._
 
 You can add more than one SSH key by clicking the **New SSH Key** button. This allows you to add a specific key for your CI without a passphrase, while keeping the one on your computer protected with a passphrase.
 
-![Screenshot showing multiple SSH keys added to droplet configuration](./images/1_1_12_add_addtional_ssh_keys.jpg)
+![Screenshot showing multiple SSH keys added to droplet configuration](./images/1_1_12_add_additional_ssh_keys.jpg)
 _Add multiple SSH keys._
 
 You are almost done. Select **Add improved metrics monitoring and alerting** because it is free.
