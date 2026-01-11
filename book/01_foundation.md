@@ -165,7 +165,7 @@ Use the SSH command to connect to the machine. Pass your private key using the `
 ssh -i ~/.ssh/<your_key_name> root@<your_droplet_ip>
 ```
 
-You will see a security warning about the authenticity of host. Type `yes` and hit `Enter` to continue.
+You will see a security warning about the authenticity of the host. Type `yes` and hit `Enter` to continue.
 
 ```text
 The authenticity of host '<your_droplet_ip> (<your_droplet_ip>)' can't be established.
@@ -362,7 +362,7 @@ Both errors mean the same thing: The root account is now locked against remote l
 >
 > However, it is good practice to set it manually to ensure your server remains secure even if you move it to another provider or disable the cloud setup scripts.
 >
-> Modern Linux services (like SSH, Nginx, and APT) use a "drop-in" configuration system. They read the main config file first, then look for a folder ending in `.d` (e.g., `/etc/ssh/sshd_config.d/`) and load those files in alphabetical order. The **last file read wins**.
+> Modern Linux services (like SSH, Nginx, and APT) use a "drop-in" configuration system. They read the main config file first, then look for a folder ending in `.d` (e.g., `/etc/ssh/sshd_config.d/`) and load those files in alphabetical order. The last file read takes precedence (wins).
 >
 > You can see this "hidden" security rule by running this command:
 >
