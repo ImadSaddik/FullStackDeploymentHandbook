@@ -122,7 +122,7 @@ _Select the free monitoring option._
 Give your droplet a name you can recognize, add tags, and assign it to the project you created. You can deploy multiple droplets, but for now, keep the quantity set to **1 droplet**.
 
 ![image](./images/1_1_13_final_step_before_creating_droplet.png)
-_Fill the finalize details section._
+_Give your droplet a name, tags and assign it to a project._
 
 Click on **Create droplet**. You will be redirected to the project page. Under **Resources**, you should see a **green dot** next to your droplet. This means it is running.
 
@@ -134,7 +134,7 @@ Later, if you find that this VM cannot handle the traffic, you can click on **Up
 ![image](./images/1_1_15_upsize_droplet.png)
 _Increase resources by upsizing._
 
-You are now ready to connect to your VM. Find the **IP address** on the project page.
+You are now ready to connect to your VM. Find the **IP address** on the project page. Copy the IP address shown next to your droplet's name.
 
 ![image](./images/1_1_16_find_ip_address.png)
 _Locate the IP address of the VM._
