@@ -79,6 +79,13 @@ When you try to connect, the server checks if your "key" fits its "lock." If it 
 ![Diagram showing SSH key authentication flow between client and server](./images/1_1_10_how_ssh_keys_work.png)
 _How SSH keys verify your identity._
 
+The diagram above shows the conversation that happens between your computer and the server:
+
+1. **SSH request**: Your computer contacts the server and says, "I want to connect using this specific key ID."
+2. **Challenge**: The server is cautious. It sends back a random string of characters (called a nonce) and says, "Prove you own the private key by signing this random message."
+3. **Send signature**: Your computer takes that random message and "signs" it using your private key. This creates a unique digital signature that gets sent back to the server.
+4. **The result**: The server uses the public key (which you uploaded to it) to verify the signature. If the signature matches, the server knows you have the private key and grants access.
+
 To generate a key, open the terminal on your local computer. You will use the [Ed25519](https://en.wikipedia.org/wiki/EdDSA#Ed25519) algorithm, which is faster and more secure than the older RSA standard.
 
 ```bash
@@ -132,7 +139,7 @@ _Select the free monitoring option._
 Give your droplet a name you can recognize, add tags, and assign it to the project you created. You can deploy multiple droplets, but for now, keep the quantity set to **1 droplet**.
 
 ![Screenshot of droplet finalization form with hostname, tags, and project fields](./images/1_1_14_final_step_before_creating_droplet.png)
-_Give your droplet a name, tags and assign it to a project._
+_Give your droplet a name, tags, and assign it to a project._
 
 Click on **Create droplet**. You will be redirected to the project page. Under **Resources**, you should see a **green dot** next to your droplet. This means it is running.
 
@@ -250,7 +257,7 @@ Now, log out of the server (`exit` or `Ctrl+D`) and attempt to log in as your ne
 ssh -i ~/.ssh/<private_key_name> <your_username>@<your_droplet_ip>
 ```
 
-You will get an error. This happens because the SSH key you authorized exists only in the `root` user's authorized_keys file. The new user (`<your_username>`) has an empty list. You need to copy the key from `root` to `<your_username>`.
+You will get an error. This happens because the SSH key you authorized exists only in the `root` user's `authorized_keys` file. The new user (`<your_username>`) has an empty list. You need to copy the key from `root` to `<your_username>`.
 
 ```text
 <your_username>@<your_droplet_ip>: Permission denied (publickey).
@@ -357,7 +364,7 @@ Both errors mean the same thing: The root account is now locked against remote l
 > You can see this "hidden" security rule by running this command:
 >
 > ```bash
-> grep -r "PasswordAuthentication" /etc/ssh/sshd_config.d/
+> sudo grep -r "PasswordAuthentication" /etc/ssh/sshd_config.d/
 > ```
 >
 > You will see something like this:
