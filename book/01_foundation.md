@@ -358,13 +358,19 @@ Received disconnect from <your_droplet_ip> port 22:2: Too many authentication fa
 Both errors mean the same thing: The root account is now locked against remote login.
 
 > [!NOTE]
-> Setting `PasswordAuthentication no` is optional because DigitalOcean already disabled password authentication when you created the droplet (assuming you selected SSH key authentication)
+> Setting `PasswordAuthentication no` is optional because DigitalOcean already disabled password authentication when you created the droplet (assuming you selected SSH key authentication).
 >
-> However, it is good practice to set it manually to ensure your server remains secure even if you move it to another provider or disable the cloud setup scripts.
+> However, it is good practice to set it manually. This ensures your server remains secure if you run your setup scripts on a different provider that does not create those default cloud settings.
 >
-> Modern Linux services (like SSH, Nginx, and APT) use a "drop-in" configuration system. They read the main config file first, then look for a folder ending in `.d` (e.g., `/etc/ssh/sshd_config.d/`) and load those files in alphabetical order. The last file read takes precedence (wins).
+> Unlike many Linux services where the "last configuration wins", SSH uses a "first match wins" rule. It applies the first value it finds for a setting and ignores the rest.
 >
-> You can see this "hidden" security rule by running this command:
+> DigitalOcean's default `sshd_config` file includes this line at the very top:
+>
+> ```text
+> Include /etc/ssh/sshd_config.d/*.conf
+> ```
+>
+> This means SSH reads the files in the `.d` folder before reading the rest of your main file. You can see this hidden rule by running:
 >
 > ```bash
 > sudo grep -r "PasswordAuthentication" /etc/ssh/sshd_config.d/
@@ -377,9 +383,11 @@ Both errors mean the same thing: The root account is now locked against remote l
 > /etc/ssh/sshd_config.d/60-cloudimg-settings.conf:PasswordAuthentication no
 > ```
 >
-> DigitalOcean's setup script created that file to protect you automatically.
+> Because SSH sees this "no" first, it locks that setting in.
 >
-> So why did we edit the main file? Because you should never rely on a cloud provider's script for your core security. If you ever move this server to another provider (like AWS or a physical server), that 50-cloud-init.conf won't exist. By explicitly setting it in the main `sshd_config`, you ensure your server is secure forever, no matter where it runs.
+> So why did we edit the main file? We edit the main `sshd_config` file as a safety net.
+>
+> If you ever use your setup script to configure a fresh server on a bare-metal provider or a different cloud, that `50-cloud-init.conf` file might not exist. By explicitly setting `PasswordAuthentication no` in your main configuration, you guarantee your server is secure regardless of the hosting provider.
 
 ### Simplify SSH access
 
