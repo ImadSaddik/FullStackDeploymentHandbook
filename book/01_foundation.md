@@ -435,4 +435,4 @@ Your computer will automatically look up the IP, user, and key, and log you stra
 
 You have successfully configured a clean Ubuntu server and secured it with SSH keys. However, your server is still exposed to the open internet.
 
-In the next chapter, **The firewall strategy**, you will lock down the network. You will learn how to configure [UFW](https://www.digitalocean.com/community/tutorials/ufw-essentials-common-firewall-rules-and-commands) to block unwanted traffic, set up [Fail2Ban](https://github.com/fail2ban/fail2ban) to stop brute-force attacks, and use the Recovery Console if you ever get locked out.
+In the next subchapter, **The firewall strategy**, you will lock down the network. You will learn how to configure [UFW](https://www.digitalocean.com/community/tutorials/ufw-essentials-common-firewall-rules-and-commands) to block unwanted traffic, set up [Fail2Ban](https://github.com/fail2ban/fail2ban) to stop brute-force attacks, and use the Recovery Console if you ever get locked out.
