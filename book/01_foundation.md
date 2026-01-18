@@ -8,6 +8,11 @@ Before you deploy any code, you need a secure environment. You will use DigitalO
 
 By the end of this section, you will have a server running Ubuntu 24.04 LTS, accessed securely via SSH keys, with password authentication completely disabled.
 
+> [!TIP]
+> Prefer video? Watch this section walkthrough: [https://www.youtube.com/watch?v=e7Tz_YRfoCc](https://www.youtube.com/watch?v=e7Tz_YRfoCc)
+
+<!-- This comment is here to satisfy the MD028 rule -->
+
 > [!IMPORTANT]
 > Throughout this guide, you will see text inside angle brackets like `<your_username>` or `<your_key_name>`. These are **placeholders**. You must replace them with your actual values and **remove the brackets** when running the commands.
 
