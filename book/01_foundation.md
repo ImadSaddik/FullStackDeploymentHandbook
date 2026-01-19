@@ -4,7 +4,7 @@
 
 ### Introduction
 
-Before you deploy any code, you need a secure environment. You will use DigitalOcean, but these concepts apply to AWS EC2, Linode, or even a Raspberry Pi.
+Before you deploy any code, you need a secure environment. We use DigitalOcean here, but these concepts apply to AWS EC2, Linode, or even a Raspberry Pi.
 
 By the end of this section, you will have a server running Ubuntu 24.04 LTS, accessed securely via SSH keys, with password authentication completely disabled.
 
@@ -18,7 +18,7 @@ By the end of this section, you will have a server running Ubuntu 24.04 LTS, acc
 
 ### Create the project
 
-In this handbook, you will use DigitalOcean to host your web application. If you don’t have an account, [create one here](https://m.do.co/c/4f9010fc5eb3) to get **$200 in free credit**.
+In this handbook, we use DigitalOcean to host your web application. If you don’t have an account, [create one here](https://m.do.co/c/4f9010fc5eb3) to get **$200 in free credit**.
 
 After creating your account, create a project to hold your resources. Click on the **New project** button.
 
@@ -58,7 +58,7 @@ Now you need to choose the size of your virtual machine. You can pick between **
 
 Dedicated VMs are more expensive because the resources are **reserved only for you**. Adding more RAM, disk space, or CPU cores will also increase the price.
 
-Fortunately, you can **change the droplet size later** if needed. For now, you will create a droplet with a shared CPU and the lowest resources. This costs **$4 per month**, and I will show you how to upgrade it later.
+Fortunately, you can **change the droplet size later** if needed. For now, create a droplet with a shared CPU and the lowest resources. This costs **$4 per month**, and I will show you how to upgrade it later.
 
 ![Screenshot of droplet size options showing CPU, RAM, and storage configurations](./images/1_1_7_choose_size.png)
 _Select the droplet size that fits your needs._
@@ -94,7 +94,7 @@ The diagram above shows the conversation that happens between your computer and 
 3. **Send signature**: Your computer takes that random message and "signs" it using your private key. This creates a unique digital signature that gets sent back to the server.
 4. **The result**: The server uses the public key (which you uploaded to it) to verify the signature. If the signature matches, the server knows you have the private key and grants access.
 
-To generate a key, open the terminal on your local computer. You will use the [Ed25519](https://en.wikipedia.org/wiki/EdDSA#Ed25519) algorithm, which is faster and more secure than the older RSA standard.
+To generate a key, open the terminal on your local computer. Use the [Ed25519](https://en.wikipedia.org/wiki/EdDSA#Ed25519) algorithm, which is faster and more secure than the older RSA standard.
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/<your_key_name> -C "<key_comment>"
@@ -106,7 +106,7 @@ Here is what the arguments do:
 - `-f ~/.ssh/<your_key_name>`: Saves the key with a specific name so you don’t overwrite your default keys.
 - `-C "<key_comment>"`: Adds a comment to help you identify the key.
 
-You will be asked to add a **passphrase**. This is an extra password to protect your private key. If someone steals your private key file, they cannot use it without this passphrase.
+The system will ask you to add a **passphrase**. This is an extra password to protect your private key. If someone steals your private key file, they cannot use it without this passphrase.
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/<your_key_name> -C "<key_comment>"
@@ -149,7 +149,7 @@ Give your droplet a name you can recognize, add tags, and assign it to the proje
 ![Screenshot of droplet finalization form with hostname, tags, and project fields](./images/1_1_14_final_step_before_creating_droplet.png)
 _Give your droplet a name, tags, and assign it to a project._
 
-Click on **Create droplet**. You will be redirected to the project page. Under **Resources**, you should see a **green dot** next to your droplet. This means it is running.
+Click on **Create droplet**. The site redirects you to the project page. Under **Resources**, you should see a **green dot** next to your droplet. This means it is running.
 
 ![Screenshot of project resources page showing active droplet with green status indicator](./images/1_1_15_droplet_in_project_page.png)
 _Ensure that the droplet is running and assigned to the project._
@@ -170,7 +170,7 @@ Use the SSH command to connect to the machine. Pass your private key using the `
 ssh -i ~/.ssh/<your_key_name> root@<your_droplet_ip>
 ```
 
-You will see a security warning about the authenticity of the host. Type `yes` and hit `Enter` to continue.
+A security warning appears about the authenticity of the host. Type `yes` and hit `Enter` to continue.
 
 ```text
 The authenticity of host '<your_droplet_ip> (<your_droplet_ip>)' can't be established.
@@ -235,7 +235,7 @@ Create a new user to act as a security barrier.
 adduser <your_username>
 ```
 
-You will be asked to set a password and fill in some details. You can skip the details by pressing `Enter`.
+It will ask you to set a password and fill in some details. You can skip the details by pressing `Enter`.
 
 ```text
 New password:
@@ -277,7 +277,7 @@ Log back in as **root**.
 ssh -i ~/.ssh/<private_key_name> root@<your_droplet_ip>
 ```
 
-Run these commands to copy the authorized keys to the new user. You will copy the entire directory and preserve the strict root permissions using the `--preserve=mode` flag.
+Run these commands to copy the authorized keys to the new user. Copy the entire directory and preserve the strict root permissions using the `--preserve=mode` flag.
 
 ```bash
 # Copy the .ssh directory, preserving the strict file permissions
@@ -440,4 +440,4 @@ Your computer will automatically look up the IP, user, and key, and log you stra
 
 You have successfully configured a clean Ubuntu server and secured it with SSH keys. However, your server is still exposed to the open internet.
 
-In the next subchapter, **The firewall strategy**, you will lock down the network. You will learn how to configure [UFW](https://www.digitalocean.com/community/tutorials/ufw-essentials-common-firewall-rules-and-commands) to block unwanted traffic, set up [Fail2Ban](https://github.com/fail2ban/fail2ban) to stop brute-force attacks, and use the Recovery Console if you ever get locked out.
+In the next subchapter, **The firewall strategy**, we will lock down the network. You will learn how to configure [UFW](https://www.digitalocean.com/community/tutorials/ufw-essentials-common-firewall-rules-and-commands) to block unwanted traffic, set up [Fail2Ban](https://github.com/fail2ban/fail2ban) to stop brute-force attacks, and use the Recovery Console if you ever get locked out.
