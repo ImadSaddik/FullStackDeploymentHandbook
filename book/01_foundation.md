@@ -527,6 +527,8 @@ Even though they cannot get in (because you disabled password authentication), t
 
 To stop this, install [Fail2Ban](https://github.com/fail2ban/fail2ban). This tool monitors your logs in real-time. If an IP address fails to log in too many times, Fail2Ban instantly updates the firewall to block that IP completely.
 
+![How Fail2Ban turns log entries into firewall rules](./images/1_2_3_fail2ban_firewall_rules_illustration.png)
+
 Fail2Ban is available in Ubuntu's default repositories. Install it with this command:
 
 ```bash
