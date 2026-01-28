@@ -527,7 +527,7 @@ Even though they cannot get in (because you disabled password authentication), t
 
 To stop this, install [Fail2Ban](https://github.com/fail2ban/fail2ban). This tool monitors your logs in real-time. If an IP address fails to log in too many times, Fail2Ban instantly updates the firewall to block that IP completely.
 
-![How Fail2Ban turns log entries into firewall rules](./images/1_2_3_fail2ban_firewall_rules_illustration.png)
+![How Fail2Ban turns log entries into firewall rules](./images/1_2_1_fail2ban_firewall_rules_illustration.png)
 
 Fail2Ban is available in Ubuntu's default repositories. Install it with this command:
 
@@ -608,7 +608,7 @@ If you get locked out, DigitalOcean provides a Recovery Console. This feature gi
 3. Click on the **Access** button in the left sidebar.
 4. Click **Launch Recovery Console**.
 
-![Accessing the Recovery Console from the DigitalOcean dashboard](./images/1_2_1_locate_console_digital_ocean_inkscape.png)
+![Accessing the Recovery Console from the DigitalOcean dashboard](./images/1_2_2_locate_console_digital_ocean_inkscape.png)
 
 Once the console opens, you will need to log in.
 
@@ -617,7 +617,7 @@ Once the console opens, you will need to log in.
 
 The keyboard mapping in the Recovery Console can be tricky. It is a good idea to type your password in the username field first just to see if the characters match what you are pressing, then delete it and log in properly.
 
-![Click the Launch Recovery Console button](./images/1_2_2_launch_recovery_console_inkscape.png)
+![Click the Launch Recovery Console button](./images/1_2_3_launch_recovery_console_inkscape.png)
 
 Once you are logged in, you can run the missing command to fix the issue. For example, if you forgot to allow SSH:
 
