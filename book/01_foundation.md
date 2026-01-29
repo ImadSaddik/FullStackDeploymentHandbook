@@ -564,7 +564,13 @@ Here is what these settings do:
 - `maxretry`: Allows a user to fail 5 times before being banned.
 - `findtime`: The window of time (10 minutes) in which those 5 failures must occur to trigger a ban.
 
-Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`). Once installed, enable the service to start automatically when the server reboots.
+Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`). Restart the Fail2Ban service for the new configuration to take effect:
+
+```bash
+sudo systemctl restart fail2ban
+```
+
+Once installed, enable the service to start automatically when the server reboots.
 
 ```bash
 sudo systemctl enable fail2ban
