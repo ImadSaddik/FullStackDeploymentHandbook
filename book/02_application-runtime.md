@@ -336,7 +336,7 @@ ssh -L 8080:localhost:8080 my-website
 
 Now, open your browser and visit `http://localhost:8080`. You should see your Vue.js application.
 
-![image](https://cdn-images-1.medium.com/max/1043/1*N19pj6K6T8hC_MDpeUpxGA.png)
+![Home page of my website](./images/2_1_2_visiting_the_website_at_8080.png)
 _The home page of my website._
 
 > [!NOTE]
