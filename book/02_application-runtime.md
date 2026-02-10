@@ -144,7 +144,7 @@ INFO: Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 #### Verify the backend is running
 
-In the previous chapter, we enabled [UFW](https://wiki.ubuntu.com/UncomplicatedFirewall) and blocked all ports except `SSH`. If you try to visit `http://<your_droplet_ip>:8000` in your browser, it will fail. This is good, it means your firewall is working.
+In the previous chapter, we enabled [UFW](https://wiki.ubuntu.com/UncomplicatedFirewall) and blocked all ports except `SSH`. If you try to visit `http://<your_droplet_ip>:8000` in your browser, it will fail. This is good; it means your firewall is working.
 
 To verify the app is running, open a **new terminal window**, SSH into the server, and run:
 
@@ -588,7 +588,7 @@ imad      833507  0.2  6.9 224996 32732 ?        Sl   Feb07   4:02 ... /web_app/
 
 I have dozens of processes running simultaneously. Some are from yesterday (Feb 07), some are from last month (Jan 01), and some are even from last year (2025)! These are "zombie" workers, orphaned processes running in the background, fighting over the same socket file and eating your RAM.
 
-You might think, "Does it matter?" Yes. Run this command to see exactly how much memory each of these ghosts is stealing. It sorts processes by memory usage:
+You might think, "Does it matter?" Yes. Run this command to see exactly how much memory each of these ghosts are stealing. It sorts processes by memory usage:
 
 ```bash
 ps -eo pid,user,rss,comm | grep gunicorn | awk '{printf "%s %s %0.1fM %s\n", $1, $2, $3/1024, $4}' | sort -k3 -hr
@@ -620,7 +620,7 @@ This usually happens for two reasons:
 1. **Manual testing:** You ran the startup script manually to test it, but closed the terminal without killing the process (`Ctrl+C`), leaving it running in the background.
 2. **Configuration shifts:** You changed the script (e.g., from 3 workers to 1) but didn't kill the old "3-worker" process before starting the new "1-worker" one.
 
-The easy and quick fix is to kill everything and let Supervisor do its job.
+The quick and easy fix is to kill everything and let Supervisor do its job.
 
 > [!WARNING]
 > This will cause downtime. The command below kills every `Gunicorn` process instantly. Your site will return a `502 Bad Gateway` error for about 5-10 seconds until Supervisor detects the crash and restarts a fresh instance. If you have active users right now, use the safe option instead.
@@ -689,8 +689,6 @@ sudo kill 29492 60096 783416 ...
 ```
 
 Since you are only killing the zombies, the main process continues serving traffic without interruption.
-
-It is great to be precise about the upcoming content. This updated "What is next?" section perfectly sets the stage for Nginx, security headers, and the reverse proxy configuration.
 
 ### What is next?
 
