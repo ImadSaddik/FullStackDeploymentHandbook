@@ -4,7 +4,7 @@
 
 ### Introduction
 
-You have a secure server, but it is empty. It is time to turn it into a web server.
+You have a secure server, but it’s time to put it to work. It is time to turn it into a web server.
 
 In this chapter, you will move your codebase to the cloud, install the necessary runtimes (Python and Node.js), and configure a process manager to keep your backend alive.
 
