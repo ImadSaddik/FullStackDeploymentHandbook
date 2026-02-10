@@ -1,4 +1,4 @@
-# Module 2: The Application runtime
+# Module 2: The application runtime
 
 ## Manual deployment
 
