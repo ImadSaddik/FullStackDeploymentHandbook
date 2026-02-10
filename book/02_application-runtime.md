@@ -78,7 +78,7 @@ ls
 # Output: README.md ...
 ```
 
-Right now, these files are owned by `root` (because you used sudo). Change the ownership to your user so you can modify them without constant permission issues.
+Right now, these files are owned by `root` (because you used sudo). Change the ownership to your user account so you can manage the files without needing `sudo` for every minor change.
 
 ```bash
 sudo chown -R <your_username>:<your_username> /web_app
@@ -110,7 +110,7 @@ sudo apt install python3-pip python3-venv python3-dev -y
 
 ### Run the backend
 
-Before you configure the production servers ([Nginx](https://nginx.org/) and [Gunicorn](https://gunicorn.org/)), you need to ensure the application actually runs.
+Before you configure the production servers ([Nginx](https://nginx.org/) and [Gunicorn](https://gunicorn.org/)), you need to ensure the application runs properly.
 
 First, move to the backend folder, create a virtual environment named `venv`, and activate it.
 
@@ -545,7 +545,7 @@ The most important part of this setup is the [socket file](https://askubuntu.com
 ls -l /web_app/backend/venv/run/gunicorn.sock
 ```
 
-You should see a file line starting with `s` (for socket):
+You should see the file details, and the first character should be an `s` (indicating a socket file):
 
 ```text
 srwxr-xr-x 1 <your_username> <your_username> 0 Feb 8 13:00 /web_app/backend/venv/run/gunicorn.sock
