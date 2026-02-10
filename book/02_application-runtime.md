@@ -4,7 +4,7 @@
 
 ### Introduction
 
-You have a secure server, but it’s time to put it to work. It is time to turn it into a web server.
+You have a secure server; now, it’s time to put it to work by turning it into a web server.
 
 In this chapter, you will move your codebase to the cloud, install the necessary runtimes (Python and Node.js), and configure a process manager to keep your backend alive.
 
@@ -26,7 +26,7 @@ If your project uses a different structure or stack, please adjust the file path
 
 #### Compress and upload the code
 
-On your local machine, create a compressed archive of your project. This makes the transfer much faster. Run this command inside your project folder:
+On your local machine, create a compressed archive of your project to speed up the transfer. Run this command inside your project folder:
 
 ```bash
 tar -czvf source_code.tar.gz .
@@ -78,7 +78,7 @@ ls
 # Output: README.md ...
 ```
 
-Right now, these files are owned by `root` (because you used sudo). Change the ownership to your user account so you can manage the files without needing `sudo` for every minor change.
+Currently, these files are owned by `root` (because you used sudo). Change the ownership to your user account so you can manage the files without needing `sudo` for every minor change.
 
 ```bash
 sudo chown -R <your_username>:<your_username> /web_app
@@ -201,7 +201,7 @@ pnpm run build
 
 **Did the build fail?** If you are using a droplet with low RAM (like the $4 plan), this command will likely fail with an "Out of Memory" error or simply say `Killed`. This happens because the build process needs more RAM than the server has available.
 
-Here is the error you might see:
+You might see the following error:
 
 ```text
 Building for production...Killed
@@ -370,7 +370,7 @@ pip install gunicorn
 
 #### Create the startup script
 
-You might wonder why you need `Gunicorn` and `Uvicorn`.
+You may ask, why do we need both `Gunicorn` and `Uvicorn`?
 
 - `Gunicorn` acts as the **Manager**. It handles the process, creates multiple workers, and ensures they stay alive.
 - `Uvicorn` acts as the **Worker**. It runs inside Gunicorn and handles the actual asynchronous events that FastAPI needs.
@@ -588,7 +588,7 @@ imad      833507  0.2  6.9 224996 32732 ?        Sl   Feb07   4:02 ... /web_app/
 
 I have dozens of processes running simultaneously. Some are from yesterday (Feb 07), some are from last month (Jan 01), and some are even from last year (2025)! These are "zombie" workers, orphaned processes running in the background, fighting over the same socket file and eating your RAM.
 
-You might think, "Does it matter?" Yes. Run this command to see exactly how much memory each of these ghosts are stealing. It sorts processes by memory usage:
+You might wonder if this actually matters. The answer is yes. Run this command to see exactly how much memory each of these ghosts are stealing. It sorts processes by memory usage:
 
 ```bash
 ps -eo pid,user,rss,comm | grep gunicorn | awk '{printf "%s %s %0.1fM %s\n", $1, $2, $3/1024, $4}' | sort -k3 -hr
