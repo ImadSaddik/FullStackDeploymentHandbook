@@ -318,6 +318,9 @@ If you try to visit `http://<your_droplet_ip>:8080` in your browser, it will fai
 
 Instead of opening port `8080` to the entire world (which is insecure), you can use your existing SSH connection to create a private [tunnel](https://iximiuz.com/en/posts/ssh-tunnels/) to the server.
 
+![add illustration explaining ssh tunneling](./images/2_1_1_ssh_tunnel_illustration.png)
+_Visualizing SSH local port forwarding. The `-L` flag creates a secure, encrypted "pipe" that forwards traffic from your local machine (port 8080) directly to the server's internal localhost (port 8080), effectively bypassing the remote firewall._
+
 Think of it like a secure pipe inside your existing SSH connection:
 
 1. Local end: You open port `8080` on your laptop (`localhost`).
