@@ -696,7 +696,8 @@ imad   833507  833505  ... gunicorn main:app (WORKER - Parent is 833505)
 Now that you have visually confirmed the zombies (the ones whose PPID is `1`), you can kill them safely without touching the Master (`833505`) or its Worker (`833507`).
 
 ```bash
-sudo kill 29492 60096 783416 ...
+# Syntax: sudo kill <pid_1> <pid_2> <pid_3>
+sudo kill 29492 60096 783416
 ```
 
 > [!NOTE]
