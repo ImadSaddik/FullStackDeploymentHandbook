@@ -397,7 +397,7 @@ Paste the following script into the editor.
 
 NAME='<your_project_name>'
 APPDIR=/web_app/backend
-SOCKFILE=/web_app/backend/venv/run/gunicorn.sock
+SOCKFILE=/web_app/backend/gunicorn.sock
 USER=<your_username>
 GROUP=<your_username>
 # Increase this if you have more traffic or a more complex app
@@ -544,13 +544,13 @@ You should see lines confirming that like `3 workers` have started and that the 
 The most important part of this setup is the [socket file](https://askubuntu.com/questions/372725/what-are-socket-files). This is the actual connection point that Nginx will use later. Verify it was created successfully:
 
 ```bash
-ls -l /web_app/backend/venv/run/gunicorn.sock
+ls -l /web_app/backend/gunicorn.sock
 ```
 
 You should see the file details, and the first character should be an `s` (indicating a socket file):
 
 ```text
-srwxr-xr-x 1 <your_username> <your_username> 0 Feb 8 13:00 /web_app/backend/venv/run/gunicorn.sock
+srwxr-xr-x 1 <your_username> <your_username> 0 Feb 8 13:00 /web_app/backend/gunicorn.sock
 ^
 ```
 
