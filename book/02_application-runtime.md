@@ -146,9 +146,18 @@ INFO: Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 #### Verify the backend is running
 
-In the previous chapter, we enabled [UFW](https://wiki.ubuntu.com/UncomplicatedFirewall) and blocked all ports except `SSH`. If you try to visit `http://<your_droplet_ip>:8000` in your browser, it will fail. This is good; it means your firewall is working.
+You need to verify that your API is alive.
 
-To verify the app is running, open a **new terminal window**, SSH into the server, and run:
+First, check if your firewall is active. In the previous chapter, you configured **UFW** to block external connections.
+
+```bash
+sudo ufw status
+```
+
+- **If it says `inactive`**: You are safe to test in the browser, but remember to enable it later for security.
+- **If it says `active`**: Great. This means you cannot access port `8000` from the outside, which is what we want.
+
+To test the app through the firewall, open a **new terminal window**, SSH into the server, and run:
 
 ```bash
 curl http://127.0.0.1:8000
