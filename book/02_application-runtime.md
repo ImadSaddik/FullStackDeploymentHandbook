@@ -486,6 +486,24 @@ Create a folder where Supervisor can save the logs for your application.
 mkdir -p /web_app/backend/logs/
 ```
 
+Verify that the folder is owned by your user (not root):
+
+```bash
+ls -ld /web_app/backend/logs/
+```
+
+The output should show your username in the third column:
+
+```text
+drwxrwxr-x 2 <your_username> <your_username> 4096 Feb 12 10:30 /web_app/backend/logs/
+```
+
+If it shows `root` instead, fix it with:
+
+```bash
+sudo chown <your_username>:<your_username> /web_app/backend/logs/
+```
+
 Now, create a configuration file to tell Supervisor about your new script.
 
 ```bash
