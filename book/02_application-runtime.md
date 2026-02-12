@@ -690,6 +690,9 @@ Now that you have visually confirmed the zombies (the ones whose PPID is `1`), y
 sudo kill 29492 60096 783416 ...
 ```
 
+> [!NOTE]
+> Replace `29492`, `60096`, `783416`, etc. with the actual zombie PIDs from **your terminal output**. Do not copy-paste the example numbers; they are only from my server.
+
 Since you are only killing the zombies, the main process continues serving traffic without interruption.
 
 ### What is next?
