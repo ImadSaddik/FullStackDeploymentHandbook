@@ -29,11 +29,13 @@ If your project uses a different structure or stack, please adjust the file path
 On your local machine, create a compressed archive of your project to speed up the transfer. Run this command inside your project folder:
 
 ```bash
-tar -czvf source_code.tar.gz .
+tar -czvf source_code.tar.gz --exclude='node_modules' --exclude='venv' --exclude='__pycache__' --exclude='.git' .
 ```
 
 > [!NOTE]
 > The `.` at the end means "compress everything in the current directory". You can replace it with a specific folder or file if you only want to compress part of your project.
+>
+> We exclude `node_modules` and `venv` because they contain large files that can be easily recreated on the server. The `__pycache__` and `.git` folders are also unnecessary for deployment.
 
 Now, send the file to your VM using the `scp` ([secure copy](https://en.wikipedia.org/wiki/Secure_copy_protocol)) command. Because you configured your SSH alias in the previous chapter, you don't need to type your IP address or key path; just use `my-website`.
 
