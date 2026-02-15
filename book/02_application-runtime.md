@@ -227,7 +227,7 @@ Create a 2GB swap file (you can adjust the size if needed, but 2GB is a good sta
 sudo fallocate -l 2G /swapfile
 ```
 
-**What is `/swapfile`?** It is not a directory; it is a single file acting as "virtual RAM." By creating a file instead of a dedicated partition, you can easily resize or delete it later without messing with the hard drive's partition table.
+**What is `/swapfile`?** It is not a directory; it is a single file acting as "virtual RAM". By creating a file instead of a dedicated partition, you can easily resize or delete it later without messing with the hard drive's partition table.
 
 Set the correct permissions:
 
@@ -361,6 +361,9 @@ Currently, you are running the backend manually using `uvicorn`. If you close th
 
 - `Gunicorn`: A robust server manager that handles multiple processes.
 - `Supervisor`: A system that monitors Gunicorn and restarts it automatically if it crashes or if the server reboots.
+
+![Diagram showing the hierarchy](./images/2_1_3_process_hierarchy.png)
+_The process hierarchy: Supervisor watches the manager (Gunicorn), and the manager watches the workers (Uvicorn)._
 
 Let's configure these tools to keep your backend alive and responsive.
 
@@ -642,7 +645,7 @@ ps -eo rss,comm | grep gunicorn | awk '{sum+=$1} END {printf "Total RSS: %.1fM\n
 # Output: Total RSS: 110.4M
 ```
 
-That is **110MB of RAM** wasted on a server that might only have 512MB or 1GB total. This is how servers crash "for no reason."
+That is **110MB of RAM** wasted on a server that might only have 512MB or 1GB total. This is how servers crash "for no reason".
 
 This usually happens for two reasons:
 
