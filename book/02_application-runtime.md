@@ -750,3 +750,67 @@ Nginx is an efficient web server. In this architecture, it will act as a [revers
 ![Diagram illustrating Nginx as a reverse proxy, routing frontend requests to the Vue.js dist folder and backend API requests via a Unix socket to Gunicorn and Uvicorn, supervised by a process manager.](./images/2_2_1_nginx_reverse_proxy.png)
 
 In this section, you will install Nginx, connect your frontend and backend, and apply security headers to protect your users from common web vulnerabilities.
+
+### Update the application URLs
+
+Before you configure Nginx, you need to prepare your code. In your development environment, your Vue frontend communicated with `http://localhost:8000`. In production, it must communicate with your server.
+
+#### Update the frontend base URL
+
+Open your `main.js` file (or wherever you configure [Axios](https://axios-http.com/) in your Vue project). Set the `baseURL` to your Droplet's IP address.
+
+> [!NOTE]
+> Use your server's IP address and `http` for now to ensure the basic connection works. You will secure it with `https` in an upcoming chapter.
+
+```javascript
+// In main.js
+import axios from 'axios';
+
+axios.defaults.baseURL = "http://<your_droplet_ip>";
+```
+
+This configuration ensures that when your frontend makes an API call to `/api/health`, it actually sends the request to `http://<your_droplet_ip>/api/health`.
+
+#### Rebuild the frontend
+
+Because Vue.js is a static framework, these changes do not happen automatically. You must rebuild the project to bake the new URL into the minified JavaScript files.
+
+Navigate to your frontend folder and run the build command.
+
+```bash
+cd /web_app/frontend
+pnpm run build
+```
+
+If your server has low RAM, remember to use the memory flag you learned in the previous subchapter.
+
+```bash
+NODE_OPTIONS="--max-old-space-size=2048" pnpm run build
+```
+
+#### Update backend CORS
+
+Your frontend is now trying to talk to your server's IP address. However, your FastAPI backend will block these requests unless you explicitly allow them using [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing).
+
+Go to `main.py` in your backend directory. Update your CORS middleware to include your domain.
+
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://<your_droplet_ip>"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+For these changes to take effect in your Python code, you must restart your backend service.
+
+```bash
+sudo supervisorctl restart <your_project_name>
+```
