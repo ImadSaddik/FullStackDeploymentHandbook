@@ -814,3 +814,86 @@ For these changes to take effect in your Python code, you must restart your back
 ```bash
 sudo supervisorctl restart <your_project_name>
 ```
+
+### Install and configure Nginx
+
+Now that the application code is ready, install Nginx.
+
+```bash
+sudo apt install nginx -y
+```
+
+Nginx uses [configuration files](https://nginx.org/en/docs/beginners_guide.html#conf_structure) to know how to route traffic. Create a new configuration file for your website in the `sites-available` directory.
+
+```bash
+sudo nano /etc/nginx/sites-available/<your_domain>.com
+```
+
+You are going to build this file block by block to understand exactly what each part does.
+
+#### The upstream block
+
+The first thing you need to define is where your backend lives. You do this using an `upstream` block. This block points Nginx to the Unix socket file you created with Gunicorn.
+
+Paste this at the top of the file:
+
+```nginx
+upstream <your_project_name>_app_server {
+    server unix:/web_app/backend/gunicorn.sock fail_timeout=0;
+}
+```
+
+This acts as a variable. Later in the configuration, instead of typing the long path to the socket, you will tell Nginx to send traffic to `<your_project_name>_app_server`.
+
+#### The server block
+
+Next, you define the main `server` block. This tells Nginx to listen for incoming web traffic on port 80 (standard HTTP) and to respond when someone asks for your specific domain.
+
+```nginx
+server {
+    listen 80;
+    server_name <your_droplet_ip>;
+
+    access_log /var/log/nginx/<your_domain>.com-access.log;
+    error_log /var/log/nginx/<your_domain>.com-error.log;
+    
+    # We will add the location blocks here next
+}
+```
+
+Setting up dedicated `access_log` and `error_log` files is very important. If something breaks, these files will tell you exactly what went wrong.
+
+#### Serve the frontend
+
+Inside the `server` block, you need to tell Nginx how to handle regular traffic. You want it to serve your built Vue.js files.
+
+Add this `location /` block inside your `server` block:
+
+```nginx
+    location / {
+        root /web_app/frontend/dist;
+        try_files $uri $uri/ /index.html;
+    }
+```
+
+Here is how this works:
+
+- `root`: Tells Nginx where to look for files.
+- `try_files`: This is important for [Single Page Applications](https://developer.mozilla.org/en-US/docs/Glossary/SPA) (SPAs) like Vue.js. It tells Nginx: "Try to find the exact file the user asked for (`$uri`). If it is not there, try a directory (`$uri/`). If neither exists, do not show a 404 error. Instead, return `index.html`." This allows Vue Router to take over and show the correct page or your custom 404 component.
+
+#### Proxy the backend
+
+Now, you need a rule for your API. Add this `location /api/` block right below the frontend block:
+
+```nginx
+    location /api/ {
+        proxy_pass http://<your_project_name>_app_server;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+    }
+```
+
+This block catches any URL that starts with `/api/`.
+
+The `proxy_pass` directive hands the request over to your Gunicorn socket. The `proxy_set_header` lines are crucial. They take information about the real user (like their IP address) and pass it along. Without these headers, FastAPI would think every single request was coming from Nginx itself.
