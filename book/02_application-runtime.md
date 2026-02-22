@@ -826,7 +826,7 @@ sudo apt install nginx -y
 Nginx uses [configuration files](https://nginx.org/en/docs/beginners_guide.html#conf_structure) to know how to route traffic. Create a new configuration file for your website in the `sites-available` directory.
 
 ```bash
-sudo nano /etc/nginx/sites-available/<your_domain>.com
+sudo nano /etc/nginx/sites-available/<your_project_name>
 ```
 
 You are going to build this file block by block to understand exactly what each part does.
@@ -854,8 +854,8 @@ server {
     listen 80;
     server_name <your_droplet_ip>;
 
-    access_log /var/log/nginx/<your_domain>.com-access.log;
-    error_log /var/log/nginx/<your_domain>.com-error.log;
+    access_log /var/log/nginx/<your_project_name>-access.log;
+    error_log /var/log/nginx/<your_project_name>-error.log;
     
     # We will add the location blocks here next
 }
@@ -897,3 +897,84 @@ Now, you need a rule for your API. Add this `location /api/` block right below t
 This block catches any URL that starts with `/api/`.
 
 The `proxy_pass` directive hands the request over to your Gunicorn socket. The `proxy_set_header` lines are crucial. They take information about the real user (like their IP address) and pass it along. Without these headers, FastAPI would think every single request was coming from Nginx itself.
+
+Save the file and exit nano (`Ctrl+O`, `Enter`, `Ctrl+X`).
+
+### Enable the site and update the firewall
+
+Nginx uses a two-folder system. Configuration files are created in `sites-available`. To turn them on, you must create a symbolic link (a shortcut) to them in the `sites-enabled` folder.
+
+First, delete the default placeholder page that comes with Nginx.
+
+```bash
+sudo rm /etc/nginx/sites-enabled/default
+```
+
+Now, enable your new configuration.
+
+```bash
+sudo ln -s /etc/nginx/sites-available/<your_project_name> /etc/nginx/sites-enabled/<your_project_name>
+```
+
+Always test your configuration before restarting the server. A single typo in an Nginx file will crash the entire web server.
+
+```bash
+sudo nginx -t
+```
+
+You should see an output confirming the syntax is ok and the test is successful. If you see an error, Nginx will tell you exactly which line has the problem. Go back and fix it.
+
+If the test is successful, reload Nginx to apply the changes.
+
+```bash
+sudo systemctl reload nginx
+```
+
+#### Allow web traffic through the firewall
+
+In the first chapter, you locked down the server using `UFW`, allowing only SSH. You must now open the gates for HTTP traffic.
+
+Nginx registers application profiles with UFW when it is installed. You can allow all standard web traffic by using the "Nginx Full" profile, which opens both port 80 (HTTP) and port 443 (HTTPS).
+
+```bash
+sudo ufw allow 'Nginx Full'
+```
+
+Verify that the rules were added correctly.
+
+```bash
+sudo ufw status
+```
+
+You should see both OpenSSH and Nginx Full in the active list.
+
+```text
+Status: active
+
+To                         Action      From
+--                         ------      ----
+Nginx Full                 ALLOW       Anywhere                  
+OpenSSH                    ALLOW       Anywhere                  
+22/tcp                     ALLOW       Anywhere                  
+Nginx Full (v6)            ALLOW       Anywhere (v6)             
+OpenSSH (v6)               ALLOW       Anywhere (v6)             
+22/tcp (v6)                ALLOW       Anywhere (v6)
+```
+
+#### Test the deployment
+
+Before adding complex security rules, you should verify that your basic configuration actually works.
+
+Open a web browser on your local computer and enter your Droplet's IP address:
+
+```text
+http://<your_droplet_ip>
+```
+
+You should see your Vue.js application load. Test a feature that requires the backend (like a search bar or fetching data). If it works, congratulations! Your Nginx reverse proxy is successfully serving the frontend and communicating with the FastAPI backend.
+
+If it does not load, check the Nginx error logs you configured earlier:
+
+```bash
+sudo cat /var/log/nginx/<your_project_name>-error.log
+```
