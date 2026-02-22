@@ -733,3 +733,20 @@ Your application code is on the server, built, and running. The backend is manag
 However, no one from the outside world can access it yet.
 
 In the next subchapter, **Reverse proxy & Headers**, we will install **Nginx** to serve your frontend and proxy requests to your backend. We will also secure your application by configuring essential **Security headers** (like CSP and X-Frame-Options) to protect your users.
+
+## Reverse proxy & security headers
+
+### Introduction
+
+In the previous section, you successfully started your backend and set up a process manager. Your API is alive and listening on a Unix socket file. However, your users cannot access it. Your frontend is also just a folder of static files sitting on the server, waiting to be served.
+
+You need a front door for your server. This is where [Nginx](https://nginx.org/) comes in.
+
+Nginx is an efficient web server. In this architecture, it will act as a [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy). When a user types your domain name into their browser, the request hits Nginx first. Nginx then decides what to do with that request:
+
+- If the user wants a web page, Nginx grabs the static HTML, CSS, and JS files from your Vue.js `dist` folder and sends them back immediately.
+- If the user action triggers an API call (like searching for an article), Nginx catches the request starting with `/api/` and forwards it to your Gunicorn socket.
+
+![Diagram illustrating Nginx as a reverse proxy, routing frontend requests to the Vue.js dist folder and backend API requests via a Unix socket to Gunicorn and Uvicorn, supervised by a process manager.](./images/2_2_1_nginx_reverse_proxy.png)
+
+In this section, you will install Nginx, connect your frontend and backend, and apply security headers to protect your users from common web vulnerabilities.
