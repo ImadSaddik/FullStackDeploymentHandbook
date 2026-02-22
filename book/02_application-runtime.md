@@ -978,3 +978,67 @@ If it does not load, check the Nginx error logs you configured earlier:
 ```bash
 sudo cat /var/log/nginx/<your_project_name>-error.log
 ```
+
+### Add security headers
+
+Security does not stop at the firewall. Browsers have built-in security features, but they only activate if your server tells them to. You do this by adding [HTTP security headers](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html) to your Nginx configuration.
+
+Instead of pasting one massive block of headers, let us break them down by what they actually protect. Add these lines inside your `server` block.
+
+#### HTTPS and transport
+
+First, we want to ensure that browsers strictly use secure connections when talking to your server.
+
+```nginx
+    # HSTS (2 Years)
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+```
+
+**Strict-Transport-Security (HSTS)** forces the browser to always use HTTPS when talking to your site for the next two years (`max-age=63072000`).
+
+> [!NOTE]
+> This header is ignored by browsers over regular HTTP, so it will not do anything right now. It will automatically secure your site the moment you add [SSL](https://www.cloudflare.com/learning/ssl/what-is-ssl/).
+
+#### Content and cross-origin protections
+
+Next, you need to protect your website from malicious scripts and framing attacks.
+
+```nginx
+    # CORP (Allow sharing)
+    add_header Cross-Origin-Resource-Policy "cross-origin" always;
+
+    # Anti-Clickjacking
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
+    # Stop MIME sniffing
+    add_header X-Content-Type-Options "nosniff" always;
+```
+
+Here is what these three headers do:
+
+**Cross-Origin-Resource-Policy (CORP)** controls whether other websites can load resources like images from your server. Setting it to `cross-origin` allows your public assets to be shared securely across the web.
+
+> [!NOTE]
+> If you don't want your images or other resources to be used on other sites, you can set this to `same-origin` instead.
+
+**X-Frame-Options** prevents [clickjacking](https://en.wikipedia.org/wiki/Clickjacking). It stops attackers from putting your website inside an invisible `<iframe>` on their malicious site to trick users into clicking buttons they did not intend to click. By setting it to `SAMEORIGIN`, only your own domain can frame your content.
+
+**X-Content-Type-Options** forces the browser to strictly trust the file type declared by the server. This prevents a common attack where a hacker uploads a malicious file (like a script) but disguises it as an image. With this header, the browser will refuse to execute it as code.
+
+#### Privacy and hardware features
+
+Finally, you need to protect your users' privacy and lock down access to their physical hardware.
+
+```nginx
+    # Privacy
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Disable unused features
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+```
+
+These two headers give you strict control over data and devices:
+
+**Referrer-Policy** acts as a privacy shield. When a user clicks a link on your site that goes to an external website, their browser sends a "Referer" header to the new site. The `strict-origin-when-cross-origin` setting protects user privacy by only sending your root domain name, not the full URL path, to external sites.
+
+**Permissions-Policy** acts as a hardware lock. By setting camera, microphone, geolocation, and payment to `()`, you explicitly disable these features. If a hacker somehow manages to run malicious code on your site, they still cannot access your users' webcams or microphones.
