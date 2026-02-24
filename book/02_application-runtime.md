@@ -510,7 +510,7 @@ sudo chown <your_username>:<your_username> /web_app/backend/logs/
 Now, create a configuration file to tell Supervisor about your new script.
 
 ```bash
-sudo nano /etc/supervisor/conf.d/imad-saddik.conf
+sudo nano /etc/supervisor/conf.d/<your_project_name>.conf
 ```
 
 Paste this configuration:
