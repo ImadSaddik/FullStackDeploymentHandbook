@@ -991,7 +991,7 @@ sudo cat /var/log/nginx/<your_project_name>-error.log
 
 Security does not stop at the firewall. Browsers have built-in security features, but they only activate if your server tells them to. You do this by adding [HTTP security headers](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html) to your Nginx configuration.
 
-Instead of pasting one massive block of headers, let us break them down by what they actually protect. Add these lines inside your `server` block.
+Let's break these headers down by the specific protections they provide. Add the following blocks inside your `server` block.
 
 #### HTTPS and transport
 
