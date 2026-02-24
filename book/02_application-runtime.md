@@ -569,6 +569,14 @@ You should see lines confirming that like `3 workers` have started and that the 
 [2025-10-31 06:34:36 +0000] [26934] [INFO] Application startup complete.
 ```
 
+Test your API again to confirm it is working through the socket.
+
+```bash
+curl --unix-socket /web_app/backend/gunicorn.sock http://localhost/api/health
+```
+
+The response should be the same as before (e.g., `{"status": "ok"}`), confirming that Gunicorn is running your FastAPI app correctly.
+
 #### Verify the socket file
 
 The most important part of this setup is the [socket file](https://askubuntu.com/questions/372725/what-are-socket-files). This is the actual connection point that Nginx will use later. Verify it was created successfully:
