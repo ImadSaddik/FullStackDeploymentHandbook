@@ -160,10 +160,10 @@ sudo ufw status
 To test the app through the firewall, open a **new terminal window**, SSH into the server, and run:
 
 ```bash
-curl http://127.0.0.1:8000
+curl http://127.0.0.1:8000/api/health
 ```
 
-If you see a JSON response (like `{"message": "API is alive"}`), your backend is working.
+If you see a JSON response (like `{"status": "ok"}`), your backend is working.
 
 Stop the server now by pressing `Ctrl+C` in the original terminal.
 
