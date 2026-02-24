@@ -470,7 +470,7 @@ Here is the meaning of the important parts of this script:
 Save the file and exit. Now, make the script executable so it can run as a program.
 
 ```bash
-chmod +x venv/bin/gunicorn_start
+chmod +x gunicorn_start
 ```
 
 #### Configure Supervisor
