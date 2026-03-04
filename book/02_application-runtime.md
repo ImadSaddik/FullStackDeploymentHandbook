@@ -329,7 +329,7 @@ If you try to visit `http://<your_droplet_ip>:8080` in your browser, it will fai
 
 Instead of opening port `8080` to the entire world (which is insecure), you can use your existing SSH connection to create a private [tunnel](https://iximiuz.com/en/posts/ssh-tunnels/) to the server.
 
-![add illustration explaining ssh tunneling](./images/2_1_1_ssh_tunnel_illustration.png)
+![SSH tunneling explained](./images/2_1_1_ssh_tunnel_illustration.png)
 _Visualizing SSH local port forwarding. The `-L` flag creates a secure, encrypted "pipe" that forwards traffic from your local machine (port 8080) directly to the server's internal localhost (port 8080), effectively bypassing the remote firewall._
 
 Think of it like a secure pipe inside your existing SSH connection:
@@ -460,7 +460,7 @@ Here is the meaning of the important parts of this script:
 #### Workers & Performance
 
 - `NUM_WORKERS`: This decides how many concurrent processes to run. [A good rule of thumb](https://docs.gunicorn.org/en/latest/design.html#how-many-workers) is `(2 x CPU cores) + 1`. Since this is a small server, 3 workers is a safe balance.
-- `WORKER_CLASS`: By default, Gunicorn expects a standard Python app (WSGI). Since FastAPI is asynchronous (ASGI), you must tell Gunicorn to use `uvicorn.workers.UvicornWorker` to bridge the gap.
+- `WORKER_CLASS`: By default, Gunicorn expects a standard Python app ([WSGI](https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface)). Since FastAPI is asynchronous ([ASGI](https://en.wikipedia.org/wiki/Asynchronous_Server_Gateway_Interface)), you must tell Gunicorn to use `uvicorn.workers.UvicornWorker` to bridge the gap.
 - `TIMEOUT`: If a worker freezes or takes longer than 120 seconds to respond, Gunicorn will kill it and restart it. This prevents your server from getting stuck on a bad request.
 
 #### System management
@@ -720,7 +720,7 @@ imad   833507  833505  ... gunicorn main:app (WORKER - Parent is 833505)
 
 - **PID 833505**: This matches the PID from Step 1. **KEEP IT**.
 - **PID 833507**: Look at its PPID (Parent). It is `833505`. This is a legitimate worker owned by the Master. **KEEP IT**.
-- **PID 29492 (and others)**: Look at their PPID. It is `1`. In Linux, PID 1 is the system init process. This means their original parent died, and they were "orphaned" to the OS. These are the orphans. **KILL THEM**.
+- **PID 29492 (and others)**: Look at their PPID. It is `1`. In Linux, PID 1 is the [system init process](https://en.wikipedia.org/wiki/Init). This means their original parent died, and they were "orphaned" to the OS. These are the orphans. **KILL THEM**.
 
 Now that you have visually confirmed the orphans (the ones whose PPID is `1`), you can kill them safely without touching the Master (`833505`) or its Worker (`833507`).
 
