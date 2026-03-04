@@ -761,23 +761,63 @@ In this section, you will install Nginx, connect your frontend and backend, and 
 
 ### Update the application URLs
 
-Before you configure Nginx, you need to prepare your code. In your development environment, your Vue frontend communicated with `http://localhost:8000`. In production, it must communicate with your server.
+Before you configure Nginx, you need to prepare your code. You want your frontend and backend to act as if they live on the exact same server, both in local development and in production. This avoids complex cross-origin issues.
 
 #### Update the frontend base URL
 
-Open your `main.js` file (or wherever you configure [Axios](https://axios-http.com/) in your Vue project). Set the `baseURL` to your Droplet's IP address.
-
-> [!NOTE]
-> Use your server's IP address and `http` for now to ensure the basic connection works. You will secure it with `https` in an upcoming chapter.
+Open your `main.js` file or wherever you configure [Axios](https://axios-http.com/) in your Vue project. Set the `baseURL` to a relative path.
 
 ```javascript
 // In main.js
 import axios from 'axios';
 
-axios.defaults.baseURL = "http://<your_droplet_ip>";
+axios.defaults.baseURL = "/";
 ```
 
-This configuration ensures that when your frontend makes an API call to `/api/health`, it actually sends the request to `http://<your_droplet_ip>/api/health`.
+By doing this, the browser will automatically send requests to the current host. If you are developing locally, the request goes to your local server. If your user is on your production website, the request goes to your production domain.
+
+#### Configure Vite proxy for local development
+
+Because you set the base URL to `/`, your local Vue development server will try to handle API requests itself. You need to tell Vite to forward these requests to your local FastAPI server.
+
+Update your `vite.config.js` to include a proxy rule.
+
+```javascript
+...
+
+export default defineConfig({
+  ...
+
+  server: {
+    port: 8080,
+    proxy: {
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
+    },
+  },
+});
+```
+
+This setup perfectly mimics how Nginx will work in production.
+
+#### Remove backend CORS
+
+Because your frontend and backend now share the exact same origin in both development and production, the browser will no longer block your requests.
+
+You can completely remove `CORSMiddleware` from your FastAPI `main.py` file. Your application is now more secure and efficient by design.
+
+```python
+# Remove this entire block from main.py
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
 
 #### Rebuild the frontend
 
@@ -794,33 +834,6 @@ If your server has low RAM, remember to use the memory flag you learned in the p
 
 ```bash
 NODE_OPTIONS="--max-old-space-size=2048" pnpm run build
-```
-
-#### Update backend CORS
-
-Your frontend is now trying to talk to your server's IP address. However, your FastAPI backend will block these requests unless you explicitly allow them using [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing).
-
-Go to `main.py` in your backend directory. Update your CORS middleware to include your domain.
-
-```python
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://<your_droplet_ip>"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-For these changes to take effect in your Python code, you must restart your backend service.
-
-```bash
-sudo supervisorctl restart <your_project_name>
 ```
 
 ### Install and configure Nginx
@@ -905,6 +918,36 @@ Now, you need a rule for your API. Add this `location /api/` block right below t
 This block catches any URL that starts with `/api/`.
 
 The `proxy_pass` directive hands the request over to your Gunicorn socket. The `proxy_set_header` lines are crucial. They take information about the real user (like their IP address) and pass it along. Without these headers, FastAPI would think every single request was coming from Nginx itself.
+
+#### The complete Nginx configuration
+
+Here is what your complete configuration file should look like:
+
+```nginx
+upstream <your_project_name>_app_server {
+    server unix:/web_app/backend/gunicorn.sock fail_timeout=0;
+}
+
+server {
+    listen 80;
+    server_name <your_droplet_ip>;
+
+    access_log /var/log/nginx/<your_project_name>-access.log;
+    error_log /var/log/nginx/<your_project_name>-error.log;
+
+    location / {
+        root /web_app/frontend/dist;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://<your_project_name>_app_server;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+    }
+}
+```
 
 Save the file and exit nano (`Ctrl+O`, `Enter`, `Ctrl+X`).
 
