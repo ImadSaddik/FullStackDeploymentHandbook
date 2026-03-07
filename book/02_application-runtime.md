@@ -1040,7 +1040,18 @@ sudo cat /var/log/nginx/<your_project_name>-error.log
 
 Security does not stop at the firewall. Browsers have built-in security features, but they only activate if your server tells them to. You do this by adding [HTTP security headers](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html) to your Nginx configuration.
 
-Let's break these headers down by the specific protections they provide. Add the following blocks inside your `server` block.
+#### Test your baseline security score
+
+Before we add any code, let's see how your server currently performs. There are free tools that scan your website and grade your security headers.
+
+Go to [SecurityHeaders.com](https://securityheaders.com/) or the [Mozilla HTTP Observatory](https://developer.mozilla.org/en-US/observatory) and enter your server's IP address or domain name.
+
+Because you have a fresh Nginx installation with no headers configured, you will receive a failing grade like a D or an F.
+
+![A screenshot of a security header report showing a failing grade due to missing headers.](./images/2_2_5_security_headers_before.png)
+_Your server will receive a failing grade due to missing security headers._
+
+Keep that tab open. Let's fix that score. Add the following blocks inside your `server` block.
 
 #### HTTPS and transport
 
