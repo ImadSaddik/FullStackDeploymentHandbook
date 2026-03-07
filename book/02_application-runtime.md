@@ -802,6 +802,12 @@ export default defineConfig({
 
 This setup perfectly mimics how Nginx will work in production.
 
+> [!NOTE]
+> The `...` in the code snippet means you should keep the existing configuration and just add the `server` block.
+
+![Diagram showing how Vite's development server proxies API requests to the local FastAPI server, while in production Nginx will handle the proxying.](./images/2_2_2_vite_nginx_proxies.png)
+_In development, Vite's dev server proxies API requests to the local FastAPI server. In production, Nginx will handle the proxying._
+
 #### Remove backend CORS
 
 Because your frontend and backend now share the exact same origin in both development and production, the browser will no longer block your requests.
