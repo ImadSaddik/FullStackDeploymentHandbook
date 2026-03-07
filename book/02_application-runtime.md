@@ -940,6 +940,52 @@ Finally, the `proxy_redirect off;` directive stops Nginx from interfering with b
 >
 > Second, never add a trailing slash to the end of your `proxy_pass` URL (for example, `proxy_pass http://<your_project_name>_app_server/;`). If you add that slash, Nginx will chop `/api` out of the URL before sending it to FastAPI. Because your FastAPI code explicitly expects the `/api` prefix, your backend will return 404 Not Found errors for every single request.
 
+#### Test your configuration safely (Optional)
+
+Before you restart your real server, you might want to test how Nginx routes different URLs. Testing this directly on your server can be frustrating if you make a mistake and crash your live site.
+
+You can use a free tool called [Nginx playground](https://nginx-playground.wizardzines.com/) to simulate your routing rules safely in your browser.
+
+To use it, you need to wrap your server block in `events` and `http` blocks. The playground has a built-in testing backend running on port 7777 that echoes back exactly what it receives. Here is a simplified test template you can paste into the playground:
+
+```nginx
+events {}
+
+http {
+    server {
+        listen 80;
+
+        location / {
+            return 200 "FRONTEND: Serving Vue.js files\n";
+        }
+
+        location /api {
+            proxy_pass http://127.0.0.1:7777;
+        }
+    }
+}
+```
+
+![An image showing where to put your Nginx configuration in the playground](./images/2_2_3_nginx_playground_put_config.png)
+_Paste your Nginx configuration into the playground to test it safely._
+
+In the command panel on the right side of the playground, you can simulate user requests using [curl](https://curl.se/).
+
+> [!NOTE]
+> Always use `http://localhost` in the playground's `curl` commands. The playground is completely disconnected from the internet for security. If you type your real domain name, the command will fail with a "Could not resolve host" error.
+
+Try running these two commands to see how your configuration handles them:
+
+```bash
+curl http://localhost/api
+curl http://localhost/api/search
+```
+
+![An image showing where to put the curl commands and where to observe the output](./images/2_2_4_nginx_playground_test_config.png)
+_Put the `curl` commands int the first box, click on the `Run` button, and observe the output in the second box._
+
+This is a great way to verify your trailing slashes and proxy rules before applying them to your production server.
+
 #### The complete Nginx configuration
 
 Here is what your complete configuration file should look like:
