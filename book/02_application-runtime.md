@@ -756,6 +756,7 @@ Nginx is an efficient web server. In this architecture, it will act as a [revers
 - If the user action triggers an API call (like searching for an article), Nginx catches the request starting with `/api` and forwards it to your Gunicorn socket.
 
 ![Diagram illustrating Nginx as a reverse proxy, routing frontend requests to the Vue.js dist folder and backend API requests via a Unix socket to Gunicorn and Uvicorn, supervised by a process manager.](./images/2_2_1_nginx_reverse_proxy.png)
+_Nginx acts as a reverse proxy, routing frontend requests to the Vue.js dist folder and backend API requests via a Unix socket to Gunicorn._
 
 In this section, you will install Nginx, connect your frontend and backend, and apply security headers to protect your users from common web vulnerabilities.
 
