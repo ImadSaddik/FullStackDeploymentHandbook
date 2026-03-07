@@ -761,7 +761,7 @@ In this section, you will install Nginx, connect your frontend and backend, and 
 
 ### Update the application URLs
 
-Before you configure Nginx, you need to prepare your code. You want your frontend and backend to act as if they live on the exact same server, both in local development and in production. This avoids complex cross-origin issues.
+Before you configure Nginx, you need to prepare your code. You want your frontend and backend to act as if they live on the exact same server, both in local development and in production. This avoids complex [cross-origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS) issues.
 
 #### Update the frontend base URL
 
@@ -821,7 +821,7 @@ app.add_middleware(
 
 #### Rebuild the frontend
 
-Because Vue.js is a static framework, these changes do not happen automatically. You must rebuild the project to bake the new URL into the minified JavaScript files.
+Because Vue.js is a static framework, these changes do not happen automatically. You must rebuild the project to bake the new URL into the [minified JavaScript](https://www.cloudflare.com/learning/performance/why-minify-javascript-code/) files.
 
 Navigate to your frontend folder and run the build command.
 
@@ -953,7 +953,7 @@ Save the file and exit nano (`Ctrl+O`, `Enter`, `Ctrl+X`).
 
 ### Enable the site and update the firewall
 
-Nginx uses a two-folder system. Configuration files are created in `sites-available`. To turn them on, you must create a symbolic link (a shortcut) to them in the `sites-enabled` folder.
+Nginx uses a two-folder system. Configuration files are created in `sites-available`. To turn them on, you must create a [symbolic link](https://en.wikipedia.org/wiki/Symbolic_link) (a shortcut) to them in the `sites-enabled` folder.
 
 First, delete the default placeholder page that comes with Nginx.
 
