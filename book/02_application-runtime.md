@@ -986,6 +986,45 @@ _Put the `curl` commands int the first box, click on the `Run` button, and obser
 
 This is a great way to verify your trailing slashes and proxy rules before applying them to your production server.
 
+#### How Ubuntu organizes Nginx
+
+You might notice that the final configuration below does not have the `events {}` or `http {}` blocks that you used in the testing playground.
+
+This is because Ubuntu uses a modular system for Nginx. There is a master configuration file located at `/etc/nginx/nginx.conf`. That master file already contains the `events` and `http` blocks required to start the server. At the very bottom of its `http` block, it has a special line that says `include /etc/nginx/sites-enabled/*;`.
+
+You can verify this by printing the contents of the master file:
+
+```bash
+cat /etc/nginx/nginx.conf
+```
+
+You will see a large file print to your terminal, but if you look closely, the core structure looks exactly like this:
+
+```nginx
+user www-data;
+worker_processes auto;
+# ...
+
+events {
+    worker_connections 768;
+}
+
+http {
+    # ... lots of global settings ...
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}
+```
+
+There are three important things happening in this master file:
+
+- `user www-data;`: This tells Nginx to run using the `www-data` user account.
+- `events {}`: The mandatory events block is already defined globally, so you do not need to rewrite it for every website you host.
+- `include /etc/nginx/sites-enabled/*;`: When Nginx starts up, it reads this master file, finds your custom project configuration inside the sites-enabled folder, and seamlessly pastes your code right here inside the http block.
+
+This modular system keeps your project files clean and focused only on your specific routing rules.
+
 #### The complete Nginx configuration
 
 Here is what your complete configuration file should look like:
