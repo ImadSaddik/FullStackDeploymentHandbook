@@ -806,7 +806,7 @@ This setup perfectly mimics how Nginx will work in production.
 
 Because your frontend and backend now share the exact same origin in both development and production, the browser will no longer block your requests.
 
-You can completely remove `CORSMiddleware` from your FastAPI `main.py` file. Your application is now more secure and efficient by design.
+You can completely remove `CORSMiddleware` from your FastAPI `main.py` file.
 
 ```python
 # Remove this entire block from main.py
