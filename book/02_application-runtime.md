@@ -931,6 +931,15 @@ This block catches any URL that starts with `/api`.
 
 The `proxy_pass` directive hands the request over to your Gunicorn socket. The `proxy_set_header` lines are crucial. They take information about the real user (like their IP address) and pass it along. Without these headers, FastAPI would think every single request was coming from Nginx itself.
 
+Finally, the `proxy_redirect off;` directive stops Nginx from interfering with backend redirects. Sometimes, your FastAPI code might tell the browser to redirect to another URL. If you leave Nginx to its default behavior, it might try to rewrite the `Location` header in that response, which can accidentally point your users to an internal server name instead of your public domain. Setting this to `off` tells Nginx to trust the redirect URLs exactly as FastAPI sends them.
+
+> [!WARNING]
+> Be very careful with trailing slashes in your Nginx configuration.
+>
+> First, use `location /api` instead of `location /api/`. If you leave the trailing slash on the location block, a request to exactly `/api` will trigger a 301 redirect. For API `POST` requests, this redirect can cause the browser to drop the JSON body, resulting in strange 405 or 422 errors in your backend.
+>
+> Second, never add a trailing slash to the end of your `proxy_pass` URL (for example, `proxy_pass http://<your_project_name>_app_server/;`). If you add that slash, Nginx will chop `/api` out of the URL before sending it to FastAPI. Because your FastAPI code explicitly expects the `/api` prefix, your backend will return 404 Not Found errors for every single request.
+
 #### The complete Nginx configuration
 
 Here is what your complete configuration file should look like:
@@ -1034,13 +1043,67 @@ Open a web browser on your local computer and enter your Droplet's IP address:
 http://<your_droplet_ip>
 ```
 
-You should see your Vue.js application load. Test a feature that requires the backend (like a search bar or fetching data). If it works, congratulations! Your Nginx reverse proxy is successfully serving the frontend and communicating with the FastAPI backend.
+Your Vue.js frontend should load immediately. Now test a feature that makes an API call, like a search bar or a page that fetches data from the backend.
 
-If it does not load, check the Nginx error logs you configured earlier:
+You will likely see the frontend render correctly but every API call return a [502 Bad Gateway](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/502) error. This is expected, and it is a great opportunity to understand exactly why it happens.
+
+##### Why you see a 502 Bad Gateway
+
+Check the Nginx error log you configured earlier:
 
 ```bash
 sudo cat /var/log/nginx/<your_project_name>-error.log
 ```
+
+You will find a line like this:
+
+```text
+connect() to unix:/web_app/backend/gunicorn.sock failed (13: Permission denied)
+```
+
+Here is what is happening: your Gunicorn process runs as your personal user, so the `gunicorn.sock` file it creates is owned by your user. Nginx runs as a completely separate system user called `www-data`. When Nginx tries to forward a request to the socket, Ubuntu's security model blocks it because `www-data` has no access to a file owned by someone else.
+
+The frontend works because those are just static files in `/web_app/frontend/dist`, which Nginx can read directly. The API fails because it requires Nginx to write to your socket file.
+
+##### Fix the socket permissions
+
+The solution requires two steps: adding Nginx to your user group, and ensuring that group is allowed to open your folders.
+
+First, add `www-data` (the Nginx user) to your personal user group. This gives Nginx group-level access without opening up your entire system.
+
+```bash
+sudo usermod -aG <your_username> www-data
+```
+
+Verify the change took effect by checking the members of your group:
+
+```bash
+getent group <your_username>
+```
+
+The output should show your group details with `www-data` listed at the very end:
+
+```text
+<your_username>:x:1000:www-data
+```
+
+Second, you must ensure that your group has "execute" permissions on your project folders. In Linux, execute permission (`x`) on a directory allows a user to pass through it.
+
+If your parent folders do not have this permission for the group, Nginx will be blocked at the top level and will never reach the socket file inside, resulting in a 502 error.
+
+Grant group execute permissions to your application folders to ensure Nginx can traverse them:
+
+```bash
+chmod g+x /web_app /web_app/backend
+```
+
+Now reload Nginx so it picks up the new group membership and permissions:
+
+```bash
+sudo systemctl reload nginx
+```
+
+Refresh your browser and test the API again. The 502 errors should be gone. Congratulations! Your Nginx reverse proxy is successfully serving the frontend and communicating with the FastAPI backend.
 
 ### Add security headers
 
