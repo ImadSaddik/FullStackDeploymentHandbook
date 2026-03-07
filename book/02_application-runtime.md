@@ -753,7 +753,7 @@ You need a front door for your server. This is where [Nginx](https://nginx.org/)
 Nginx is an efficient web server. In this architecture, it will act as a [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy). When a user types your domain name into their browser, the request hits Nginx first. Nginx then decides what to do with that request:
 
 - If the user wants a web page, Nginx grabs the static HTML, CSS, and JS files from your Vue.js `dist` folder and sends them back immediately.
-- If the user action triggers an API call (like searching for an article), Nginx catches the request starting with `/api/` and forwards it to your Gunicorn socket.
+- If the user action triggers an API call (like searching for an article), Nginx catches the request starting with `/api` and forwards it to your Gunicorn socket.
 
 ![Diagram illustrating Nginx as a reverse proxy, routing frontend requests to the Vue.js dist folder and backend API requests via a Unix socket to Gunicorn and Uvicorn, supervised by a process manager.](./images/2_2_1_nginx_reverse_proxy.png)
 
@@ -904,10 +904,10 @@ Here is how this works:
 
 #### Proxy the backend
 
-Now, you need a rule for your API. Add this `location /api/` block right below the frontend block:
+Now, you need a rule for your API. Add this `location /api` block right below the frontend block:
 
 ```nginx
-    location /api/ {
+    location /api {
         proxy_pass http://<your_project_name>_app_server;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header Host $http_host;
@@ -915,7 +915,7 @@ Now, you need a rule for your API. Add this `location /api/` block right below t
     }
 ```
 
-This block catches any URL that starts with `/api/`.
+This block catches any URL that starts with `/api`.
 
 The `proxy_pass` directive hands the request over to your Gunicorn socket. The `proxy_set_header` lines are crucial. They take information about the real user (like their IP address) and pass it along. Without these headers, FastAPI would think every single request was coming from Nginx itself.
 
@@ -940,7 +940,7 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    location /api/ {
+    location /api {
         proxy_pass http://<your_project_name>_app_server;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header Host $http_host;
