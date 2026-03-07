@@ -893,6 +893,9 @@ server {
 
 Setting up dedicated `access_log` and `error_log` files is very important. If something breaks, these files will tell you exactly what went wrong.
 
+> [!NOTE]
+> After creating a domain name we will come back to this file and replace `<your_droplet_ip>` with your domain (e.g., `www.mywebsite.com`).
+
 #### Serve the frontend
 
 Inside the `server` block, you need to tell Nginx how to handle regular traffic. You want it to serve your built Vue.js files.
@@ -908,7 +911,7 @@ Add this `location /` block inside your `server` block:
 
 Here is how this works:
 
-- `root`: Tells Nginx where to look for files.
+- `root`: Tells Nginx where to look for files. In this case, it points to the `dist` folder of your Vue.js frontend, which contains the final HTML, CSS, and JS files after the build process.
 - `try_files`: This is important for [Single Page Applications](https://developer.mozilla.org/en-US/docs/Glossary/SPA) (SPAs) like Vue.js. It tells Nginx: "Try to find the exact file the user asked for (`$uri`). If it is not there, try a directory (`$uri/`). If neither exists, do not show a 404 error. Instead, return `index.html`." This allows Vue Router to take over and show the correct page or your custom 404 component.
 
 #### Proxy the backend
