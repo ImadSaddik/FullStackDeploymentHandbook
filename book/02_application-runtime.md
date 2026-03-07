@@ -873,6 +873,8 @@ upstream <your_project_name>_app_server {
 
 This acts as a variable. Later in the configuration, instead of typing the long path to the socket, you will tell Nginx to send traffic to `<your_project_name>_app_server`.
 
+`fail_timeout=0` is an important setting. It tells Nginx to never mark the backend as "down" even if it fails to respond. Since Supervisor automatically restarts Gunicorn if it crashes, this setting allows Nginx to resume sending traffic the moment the service is back online, preventing unnecessary downtime.
+
 #### The server block
 
 Next, you define the main `server` block. This tells Nginx to listen for incoming web traffic on port 80 (standard HTTP) and to respond when someone asks for your specific domain.
