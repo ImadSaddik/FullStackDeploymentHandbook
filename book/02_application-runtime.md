@@ -522,7 +522,13 @@ user = <your_username>
 stdout_logfile = /web_app/backend/logs/supervisor.log
 redirect_stderr = true
 environment=LANG=en_US.UTF-8,LC_ALL=en_US.UTF-8
+stopasgroup = true
+killasgroup = true
+stopwaitsecs = 10
 ```
+
+> [!NOTE]
+> `stopasgroup` and `killasgroup` ensure that if the main process is stopped, all child processes (workers) are also stopped. This prevents orphan processes from lingering in the background.
 
 Save and exit.
 
