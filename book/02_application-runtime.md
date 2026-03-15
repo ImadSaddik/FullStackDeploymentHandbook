@@ -1517,3 +1517,9 @@ server {
 ```
 
 Save the file and exit nano (`Ctrl+O`, `Enter`, `Ctrl+X`).
+
+### What is next?
+
+Your application is now live! Nginx is serving your Vue frontend and routing API calls to your FastAPI backend.
+
+In the next chapter, **Chapter 3.1: Self-hosting Meilisearch**, you will add a search engine to your server. You will learn how to install [Meilisearch](https://www.meilisearch.com/), lock it down by isolating it with a specific system user, and import your data dumps to make your content searchable right away.
