@@ -22,3 +22,14 @@ In this chapter, you will export your local search data, install the Meilisearch
 
 > [!IMPORTANT]
 > Throughout this chapter, you will see placeholders inside angle brackets like `<YOUR_LOCAL_MASTER_KEY>` or `<YOUR_STRONG_MASTER_KEY>`. You must replace these with your actual keys and remove the brackets when running the commands.
+
+### Export your local data
+
+You have two options for getting data into your production search engine.
+
+**Option 1: Export existing data.** If you built your application on your computer, I assume you have a local Meilisearch instance running with your test data. You need to export this data so you can migrate it to the new server.
+
+**Option 2: Seed from scratch.** If you are using my reference repository and do not have a local database running, you can skip this entire section! I have included a Python script ([backend/scripts/seed_meilisearch.py](https://github.com/ImadSaddik/ImadSaddikWebsite/blob/master/backend/scripts/seed_meilisearch.py)) in the codebase that will automatically configure the settings and inject sample documents into your production server later.
+
+> [!TIP]
+> If you chose **Option 2**, jump straight to the next section: **Install Meilisearch on the server**.
