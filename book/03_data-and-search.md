@@ -73,6 +73,9 @@ If you prefer using Python instead of the terminal, you can use the official SDK
 
 First, install the SDK:
 
+> [!IMPORTANT]
+> Make sure your local Python virtual environment is active before running the install command. The exact command depends on your local setup (e.g., `source venv/bin/activate`, `conda activate`, or `uv venv`).
+
 ```bash
 pip install meilisearch
 ```
