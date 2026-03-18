@@ -33,3 +33,58 @@ You have two options for getting data into your production search engine.
 
 > [!TIP]
 > If you chose **Option 2**, jump straight to the next section: **Install Meilisearch on the server**.
+
+If you chose **Option 1**, continue reading. Meilisearch offers two ways to back up data: [Snapshots](https://www.meilisearch.com/docs/learn/data_backup/snapshots_vs_dumps#snapshots) and [Dumps](https://www.meilisearch.com/docs/learn/data_backup/snapshots_vs_dumps#dumps).
+
+- Snapshots are exact copies of the database files, meant for quick backups on the exact same Meilisearch version.
+- Dumps are essentially a set of instructions used to recreate the database from scratch. Dumps are the safest way to migrate data across different machines or versions.
+
+Because your local computer and your production server might not have the exact same setup, you must use a dump.
+
+Run this command on your **local machine** (while your local Meilisearch instance is running):
+
+```bash
+curl -X POST 'http://localhost:7700/dumps' \
+  -H 'Authorization: Bearer <YOUR_LOCAL_MASTER_KEY>'
+```
+
+You will get a JSON response back that looks like this:
+
+```json
+{
+  "taskUid": 1,
+  "indexUid": null,
+  "status": "enqueued",
+  "type": "dumpCreation",
+  "enqueuedAt": "2026-03-18T10:00:00.000000Z"
+}
+```
+
+Take note of the `taskUid` number. Creating a dump is an asynchronous operation, which means Meilisearch does it in the background. You can check the status to see when it finishes by using that ID:
+
+```bash
+curl -X GET 'http://localhost:7700/tasks/<YOUR_TASK_UID>' \
+  -H 'Authorization: Bearer <YOUR_LOCAL_MASTER_KEY>'
+```
+
+Once the status in the response says `succeeded`, your dump file (which looks something like `20260318-100000.dump`) will appear in your local `dumps/` directory.
+
+If you prefer using Python instead of the terminal, you can use the official SDK to do all of this automatically.
+
+First, install the SDK:
+
+```bash
+pip install meilisearch
+```
+
+Then, run this Python code to create the dump and wait for it to finish:
+
+```python
+import meilisearch
+
+meilisearch_client = meilisearch.Client("http://localhost:7700", "<YOUR_LOCAL_MASTER_KEY>")
+task = meilisearch_client.create_dump()
+
+meilisearch_client.wait_for_task(task.task_uid)
+print("Dump created successfully!")
+```
