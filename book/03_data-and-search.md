@@ -19,3 +19,6 @@ Hosting your own search engine on the same server as your backend has massive ad
 - **Maximum security:** Because Meilisearch runs behind your UFW firewall, it is completely invisible to the public internet.
 
 In this chapter, you will export your local search data, install the Meilisearch binary on your server, isolate it using a highly secure "system user," and import your data dumps.
+
+> [!IMPORTANT]
+> Throughout this chapter, you will see placeholders inside angle brackets like `<YOUR_LOCAL_MASTER_KEY>` or `<YOUR_STRONG_MASTER_KEY>`. You must replace these with your actual keys and remove the brackets when running the commands.
