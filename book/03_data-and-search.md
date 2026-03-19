@@ -393,6 +393,12 @@ Nov 01 07:34:15 <YOUR_HOSTNAME> meilisearch[44061]: [2026-11-01T07:34:15Z INFO  
 
 Press `Ctrl+C` to stop watching the logs when you are done.
 
+### What is next?
+
+You now have a blazing-fast search engine running in production, isolated from the outside world, and connected to your Python backend.
+
+In the next chapter, Secure management, you will learn how to maintain this database. You will set up automated daily backups to protect your data and use SSH tunneling to safely access a visual dashboard without opening any firewall ports.
+
 ### Schedule automatic backups
 
 You have cleaned up the temporary import flags, but your data is currently living on the edge. If your server crashes or your database gets corrupted, you could lose everything.
