@@ -437,3 +437,53 @@ sudo systemctl restart meilisearch
 ```
 
 Now, Meilisearch will quietly save a safe copy of your database every single day. Only the most recent snapshot is kept, so it will not fill up your hard drive over time.
+
+### Manage Meilisearch securely with a GUI
+
+Because you properly configured your UFW firewall in Chapter 1, port `7700` is blocked. No one on the internet can access your Meilisearch instance directly.
+
+This is fantastic for security, but terrible for usability if you need to manually inspect a document or tweak ranking rules. Opening the port to the public just to use an admin dashboard is a bad idea.
+
+Instead, you will use **SSH Tunneling** again, exactly like you did when previewing the frontend build. This creates a secure, temporary bridge between your local laptop and the locked-down server port.
+
+TODO
+![ILLUSTRATION NEEDED HERE](A diagram showing a developer laptop connected to the server via an SSH tunnel on port 7700, bypassing the UFW firewall, allowing the Meilisearch UI in the browser to talk directly to the protected Meilisearch instance.)
+_Using an SSH tunnel to securely access internal services without opening firewall ports._
+
+Run this command on your **local computer** (not inside the server). Keep the terminal window open.
+
+```bash
+ssh -L 7700:127.0.0.1:7700 my-website
+```
+
+> [!NOTE]
+> If you skipped setting up an SSH config file in Chapter 1, you will need to use your full connection string instead of the alias:
+>
+> `ssh -L 7700:127.0.0.1:7700 -i ~/.ssh/<YOUR_KEY_NAME> <YOUR_USERNAME>@<YOUR_DROPLET_IP>`
+
+This command tells SSH: "Listen to port 7700 on my laptop, and forward any traffic through the secure connection to port 7700 on the server."
+
+Now, you can use a great open-source tool called [meilisearch-ui](https://github.com/eyeix/meilisearch-ui) to manage your indexes visually, without installing anything on your server.
+
+TODO: add images here
+
+1. Go to [https://meilisearch-ui.vercel.app/](https://meilisearch-ui.vercel.app/) in your browser.
+2. Click to add a new instance.
+3. **Name**: Give it a descriptive name (e.g., `Production DB`).
+4. **Host**: Enter `http://127.0.0.1:7700`. (This hits your local tunnel, which forwards to the server).
+5. **API Key**: Enter your production master key.
+
+> [!NOTE]
+> Are you wondering how a secure `https://` website can connect to an insecure `http://` host without your browser blocking it? Modern web browsers have a built-in security exception for `127.0.0.1` and `localhost`. This allows local development and tunneling to work perfectly without SSL errors.
+
+![ILLUSTRATION NEEDED HERE](A screenshot of the meilisearch-ui interface showing the connection setup modal, with Host set to http://127.0.0.1:7700 and the API Key field filled in.)
+_Add a new instance in the meilisearch-ui app by providing your local tunnel host and production key._
+
+After connecting, you can browse your production indexes, test searches, and modify settings securely.
+
+![ILLUSTRATION NEEDED HERE](A screenshot showing the indexes and search results populated inside the production Meilisearch instance via the GUI.)
+_Viewing the indexes and testing queries inside the production Meilisearch instance._
+
+When you are finished managing your data, simply close the terminal window where the SSH command is running or press `Ctrl+C`.
+
+This immediately breaks the tunnel and cuts off access. Since the entire session happened inside an encrypted SSH pipe, your data remained 100% secure and was never exposed to the public internet.
