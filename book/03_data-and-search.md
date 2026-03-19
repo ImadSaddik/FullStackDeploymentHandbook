@@ -21,7 +21,7 @@ Hosting your own search engine on the same server as your backend has massive ad
 In this chapter, you will export your local search data, install the Meilisearch binary on your server, isolate it using a highly secure "system user," and import your data dumps.
 
 > [!IMPORTANT]
-> Throughout this chapter, you will see placeholders inside angle brackets like `<YOUR_LOCAL_MASTER_KEY>`, `<YOUR_STRONG_MASTER_KEY>`, or `<YOUR_DUMP_FILE.dump>`. You must replace these with your actual keys and remove the brackets when running the commands.
+> Throughout this chapter, you will see placeholders inside angle brackets like `<YOUR_LOCAL_MASTER_KEY>`, `<YOUR_STRONG_MASTER_KEY>`, etc. You must replace these with your actual keys and remove the brackets when running the commands.
 
 ### Export your local data
 
@@ -129,6 +129,10 @@ If it prints the version number, you are ready to proceed.
 
 In [Chapter 1](./01_foundation.md), you learned that running applications as `root` is a massive security risk. You created a standard user for yourself. Now, you are going to take security one step further by creating a [system user](https://wiki.archlinux.org/title/Users_and_groups#Example_adding_a_system_user) specifically for Meilisearch.
 
+TODO:
+![ILLUSTRATION NEEDED HERE](A diagram contrasting a 'Standard User' like 'imad' who has a home directory, bash shell, and can use SSH, versus a 'System User' like 'meilisearch' trapped in a sandbox directory with a blocked shell, demonstrating why hackers can't log in as a system user.)
+_The difference in privileges between a standard user account and an isolated system user._
+
 System users are "dummy" accounts. They exist purely to own files and run specific background processes. They have no password and cannot accept login attempts, making them immune to SSH brute-force attacks.
 
 Run this command to create the user:
@@ -178,4 +182,176 @@ Move the dump file from the temporary folder to the Meilisearch directory, and i
 ```bash
 sudo mv /tmp/<YOUR_DUMP_FILE.dump> /var/lib/meilisearch/
 sudo chown meilisearch:meilisearch /var/lib/meilisearch/<YOUR_DUMP_FILE.dump>
+```
+
+### Run Meilisearch as a service
+
+Just like with Gunicorn, you do not want to run Meilisearch manually in a terminal. You want it to run in the background, start automatically when the server boots, and restart if it crashes.
+
+For your FastAPI backend, you used Supervisor. For Meilisearch, you will use [systemd](https://systemd.io/), which is the built-in service manager that comes with Ubuntu.
+
+> [!NOTE]
+> Why use systemd instead of Supervisor here? It is generally best practice to manage low-level infrastructure (like databases, Redis, or Meilisearch) with the OS's native tool (`systemd`).
+>
+> Meanwhile, application-level code (like your Python API) is managed by higher-level tools like Supervisor, which are easier to restart during [CI/CD](https://www.redhat.com/en/topics/devops/what-is-ci-cd) deployments.
+
+#### Create the environment file
+
+You must secure your search engine with a strong Master Key. Instead of hardcoding this sensitive information directly into the service file, you will create a secure environment file. This keeps your secrets hidden from anyone viewing the server's process list via commands like `ps`.
+
+First, create a directory for the configuration and create the environment file:
+
+```bash
+sudo mkdir -p /etc/meilisearch
+sudo nano /etc/meilisearch/env
+```
+
+Paste the following configuration into the file. Meilisearch automatically detects environment variables that start with `MEILI_`.
+
+```ini
+MEILI_ENV=production
+MEILI_MASTER_KEY=<YOUR_STRONG_MASTER_KEY>
+```
+
+> [!IMPORTANT]
+> Replace `<YOUR_STRONG_MASTER_KEY>` with a long, randomized string (at least 16 bytes). Do not use spaces or quotes.
+
+Secure the file so that only the `meilisearch` user and `root` can read it:
+
+```bash
+sudo chown meilisearch:meilisearch /etc/meilisearch/env
+sudo chmod 600 /etc/meilisearch/env
+```
+
+#### Create the systemd service file
+
+Now, create the service file that tells Ubuntu how to manage Meilisearch:
+
+```bash
+sudo nano /etc/systemd/system/meilisearch.service
+```
+
+Paste the configuration below, but pay close attention to the `ExecStart` command depending on your setup.
+
+> [!IMPORTANT]
+> **If you chose Option 1 (Export existing data):** Leave the code exactly as it is below, but replace `<YOUR_DUMP_FILE.dump>` with the actual filename you uploaded earlier.
+>
+> **If you chose Option 2 (Seed from scratch):** Delete the two lines starting with `--import-dump` and `--ignore-dump-if-db-exists` entirely. You are starting with a fresh database.
+
+```ini
+[Unit]
+Description=Meilisearch search engine
+After=network.target
+
+[Service]
+Type=simple
+User=meilisearch
+Group=meilisearch
+
+# Load environment variables from the secure file
+EnvironmentFile=/etc/meilisearch/env
+
+WorkingDirectory=/var/lib/meilisearch
+
+ExecStart=/usr/local/bin/meilisearch \
+  --db-path "/var/lib/meilisearch/data" \
+  --dump-dir "/var/lib/meilisearch/dumps" \
+  --import-dump "/var/lib/meilisearch/<YOUR_DUMP_FILE.dump>" \
+  --ignore-dump-if-db-exists
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Let's explain this configuration file:
+
+- `After=network.target`: This tells Linux: "Do not attempt to start this service until the server's networking stack is fully active."
+- `EnvironmentFile=...`: This securely loads the `MEILI_ENV` and `MEILI_MASTER_KEY` variables from the file you just created.
+- `ExecStart=...`: This is the exact command that runs. It points to the binary, specifies where the database should be stored (`--db-path`), and tells Meilisearch where to save future dumps (`--dump-dir`).
+- `--import-dump`: This tells Meilisearch to load your local data from the specified file on its first start.
+- `--ignore-dump-if-db-exists`: This is a safety feature. It tells Meilisearch to skip the dump import entirely if a database already exists in the `data` folder.
+- `Restart=on-failure`: If the process crashes or gets killed due to low memory, `systemd` will automatically spin it back up.
+
+Save the file and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
+
+#### Enable and start the service
+
+Now, tell `systemd` to recognize your new file, enable it to start on boot, and start it immediately:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable meilisearch
+sudo systemctl start meilisearch
+```
+
+Check the status to ensure it did not crash during the import or startup process:
+
+```bash
+sudo systemctl status meilisearch
+```
+
+You should see `active (running)` in the output.
+
+```text
+● meilisearch.service - Meilisearch
+    Loaded: loaded (/etc/systemd/system/meilisearch.service; enabled; preset: enabled)
+    Active: active (running) since Sat 2026-11-01 07:13:50 UTC; 21s ago
+  Main PID: 44061 (meilisearch)
+    Tasks: 46 (limit: 503)
+    Memory: 164.8M (peak: 165.0M)
+      CPU: 505ms
+```
+
+> [!NOTE]
+> If you chose **Option 2**, skip the following verification step and the cleanup step. Your database is currently empty and will be seeded later.
+
+If you imported a dump, you can explicitly verify that your data was imported by asking Meilisearch for index statistics. Use `127.0.0.1` because the engine is running locally on the server.
+
+```bash
+curl -X GET 'http://127.0.0.1:7700/indexes/<YOUR_INDEX_NAME>/stats' \
+  -H 'Authorization: Bearer <YOUR_STRONG_MASTER_KEY>'
+```
+
+If the import worked, you will see a JSON response detailing your documents:
+
+```json
+{
+  "numberOfDocuments": 10,
+  "rawDocumentDbSize": 434176,
+  "avgDocumentSize": 43409,
+  "isIndexing": false,
+  "numberOfEmbeddings": 0,
+  "numberOfEmbeddedDocuments": 0,
+  "fieldDistribution": {
+    "...": "..."
+  }
+}
+```
+
+#### Clean up the service file
+
+Once your service is running and the data is imported, you should clean up the service file.
+
+Leaving the `--import-dump` flag in your configuration permanently is a hidden risk. If you (or an automated script) ever delete that `.dump` file to clean up your directory, Meilisearch will fatally crash on the next server reboot because it will hunt for a file that no longer exists.
+
+Open the service file again:
+
+```bash
+sudo nano /etc/systemd/system/meilisearch.service
+```
+
+Remove these two lines from the `ExecStart` command:
+
+```ini
+--import-dump "/var/lib/meilisearch/<YOUR_DUMP_FILE.dump>" \
+--ignore-dump-if-db-exists
+```
+
+Save the file, then reload systemd and restart the service to apply the clean configuration:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart meilisearch
 ```
