@@ -191,6 +191,9 @@ For your FastAPI backend, you used Supervisor. For Meilisearch, you will use [sy
 >
 > Meanwhile, application-level code (like your Python API) is managed by higher-level tools like Supervisor, which are easier to restart during [CI/CD](https://www.redhat.com/en/topics/devops/what-is-ci-cd) deployments.
 
+![Diagram showing the server stack: systemd manages OS-level infrastructure like Meilisearch, while Supervisor manages Application-level code like Gunicorn.](./images/3_1_2_systemd_vs_supervisor.png)
+_The server stack: systemd manages low-level infrastructure, while Supervisor manages high-level application code._
+
 #### Create the environment file
 
 You must secure your search engine with a strong Master Key. Instead of hardcoding this sensitive information directly into the service file, you will create a secure environment file. This keeps your secrets hidden from anyone viewing the server's process list via commands like `ps`.
