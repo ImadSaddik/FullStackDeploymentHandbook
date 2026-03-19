@@ -473,24 +473,27 @@ This command tells SSH: "Listen to port 7700 on my laptop, and forward any traff
 
 Now, you can use a great open-source tool called [meilisearch-ui](https://github.com/eyeix/meilisearch-ui) to manage your indexes visually, without installing anything on your server.
 
-TODO: add images here
+Go to [https://meilisearch-ui.vercel.app/](https://meilisearch-ui.vercel.app/) in your browser. On that page, click the "Add Instance" button to connect to your production Meilisearch.
 
-1. Go to [https://meilisearch-ui.vercel.app/](https://meilisearch-ui.vercel.app/) in your browser.
-2. Click to add a new instance.
-3. **Name**: Give it a descriptive name (e.g., `Production DB`).
-4. **Host**: Enter `http://127.0.0.1:7700`. (This hits your local tunnel, which forwards to the server).
-5. **API Key**: Enter your production master key.
+![A screenshot of the meilisearch-ui interface showing a mouse icon on the "plus" button](./images/3_2_1_add_instance_meilisearch_ui.png)
+_Add a new instance in the meilisearch-ui app._
+
+A modal will pop up asking for connection details. Fill it out like this:
+
+- **Name**: Give it a descriptive name (e.g., `Production DB`).
+- **Host**: Enter `http://127.0.0.1:7700`. (This hits your local tunnel, which forwards to the server).
+- **API Key**: Enter your production master key.
+
+![A screenshot of the meilisearch-ui interface showing the connection setup modal, with Host set to http://127.0.0.1:7700 and the API Key field filled in.](./images/3_2_2_add_instance_details_ui.jpg)
+_Add a new instance in the meilisearch-ui app by providing your local tunnel host and production key._
 
 > [!NOTE]
 > Are you wondering how a secure `https://` website can connect to an insecure `http://` host without your browser blocking it? Modern web browsers have a built-in security exception for `127.0.0.1` and `localhost`. This allows local development and tunneling to work perfectly without SSL errors.
 
-![ILLUSTRATION NEEDED HERE](A screenshot of the meilisearch-ui interface showing the connection setup modal, with Host set to http://127.0.0.1:7700 and the API Key field filled in.)
-_Add a new instance in the meilisearch-ui app by providing your local tunnel host and production key._
-
 After connecting, you can browse your production indexes, test searches, and modify settings securely.
 
-![ILLUSTRATION NEEDED HERE](A screenshot showing the indexes and search results populated inside the production Meilisearch instance via the GUI.)
-_Viewing the indexes and testing queries inside the production Meilisearch instance._
+![A screenshot of the meilisearch-ui interface showing the home page](./images/3_2_3_meilisearch_ui_dashboard.jpg)
+_The meilisearch-ui dashboard connected to the production instance through the SSH tunnel._
 
 When you are finished managing your data, simply close the terminal window where the SSH command is running or press `Ctrl+C`.
 
