@@ -124,3 +124,30 @@ meilisearch --version
 ```
 
 If it prints the version number, you are ready to proceed.
+
+### Create a dedicated system user
+
+In [Chapter 1](./01_foundation.md), you learned that running applications as `root` is a massive security risk. You created a standard user for yourself. Now, you are going to take security one step further by creating a [system user](https://wiki.archlinux.org/title/Users_and_groups#Example_adding_a_system_user) specifically for Meilisearch.
+
+System users are "dummy" accounts. They exist purely to own files and run specific background processes. They have no password and cannot accept login attempts, making them immune to SSH brute-force attacks.
+
+Run this command to create the user:
+
+```bash
+sudo useradd -d /var/lib/meilisearch -s /bin/false -m -r meilisearch
+```
+
+This command looks complex, so let's break down exactly what each flag does:
+
+- `sudo useradd`: This is the command to add a user. It's different from `adduser` (which you used in Chapter 1), as it does not prompt you for a password or full name.
+- `-d /var/lib/meilisearch`: This flag sets the user's **home directory**. Instead of the default `/home/meilisearch`, you set it to `/var/lib/meilisearch`, which is the standard Linux directory path for a background service's data.
+- `-s /bin/false`: This flag sets the user's **shell**. `/bin/false` is a dummy shell that immediately exits and does nothing. This is what makes it **impossible for anyone to log in** as this user.
+- `-m`: This flag tells `useradd` to physically **create the home directory** you specified with the `-d` flag.
+- `-r`: This flag creates the **system user**.
+
+Next, create a specific folder inside that home directory for the actual database files, and ensure the new system user owns everything inside its home directory.
+
+```bash
+sudo mkdir -p /var/lib/meilisearch/data
+sudo chown -R meilisearch:meilisearch /var/lib/meilisearch
+```
