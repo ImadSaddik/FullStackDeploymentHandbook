@@ -21,7 +21,7 @@ Hosting your own search engine on the same server as your backend has massive ad
 In this chapter, you will export your local search data, install the Meilisearch binary on your server, isolate it using a highly secure "system user," and import your data dumps.
 
 > [!IMPORTANT]
-> Throughout this chapter, you will see placeholders inside angle brackets like `<YOUR_LOCAL_MASTER_KEY>` or `<YOUR_STRONG_MASTER_KEY>`. You must replace these with your actual keys and remove the brackets when running the commands.
+> Throughout this chapter, you will see placeholders inside angle brackets like `<YOUR_LOCAL_MASTER_KEY>`, `<YOUR_STRONG_MASTER_KEY>`, or `<YOUR_DUMP_FILE.dump>`. You must replace these with your actual keys and remove the brackets when running the commands.
 
 ### Export your local data
 
@@ -150,4 +150,32 @@ Next, create a specific folder inside that home directory for the actual databas
 ```bash
 sudo mkdir -p /var/lib/meilisearch/data
 sudo chown -R meilisearch:meilisearch /var/lib/meilisearch
+```
+
+### Transfer and import the dump
+
+> [!NOTE]
+> If you chose **Option 2** (seeding from scratch), you do not have a dump file to transfer. You can skip this section and go straight to **Run Meilisearch as a service**.
+
+You need to get the dump file from your computer over to the server.
+
+First, log out of your active SSH session by typing `exit` or pressing `Ctrl+D`. Once you are back in your local terminal, use the `scp` command to upload the file.
+
+You are going to send it to the `/tmp/` directory for now. We do this because `/tmp/` is openly writable by any user, whereas our final destination (`/var/lib/meilisearch`) is strictly locked down.
+
+```bash
+scp /path/to/your/local/dumps/<YOUR_DUMP_FILE.dump> my-website:/tmp/
+```
+
+**SSH back in** to the machine.
+
+```bash
+ssh my-website
+```
+
+Move the dump file from the temporary folder to the Meilisearch directory, and immediately transfer the file ownership to the `meilisearch` user. If you skip the `chown` command, the Meilisearch service will crash because it won't have permission to read the file uploaded by your user account.
+
+```bash
+sudo mv /tmp/<YOUR_DUMP_FILE.dump> /var/lib/meilisearch/
+sudo chown meilisearch:meilisearch /var/lib/meilisearch/<YOUR_DUMP_FILE.dump>
 ```
