@@ -129,10 +129,6 @@ If it prints the version number, you are ready to proceed.
 
 In [Chapter 1](./01_foundation.md), you learned that running applications as `root` is a massive security risk. You created a standard user for yourself. Now, you are going to take security one step further by creating a [system user](https://wiki.archlinux.org/title/Users_and_groups#Example_adding_a_system_user) specifically for Meilisearch.
 
-TODO:
-![ILLUSTRATION NEEDED HERE](A diagram contrasting a 'Standard User' like 'imad' who has a home directory, bash shell, and can use SSH, versus a 'System User' like 'meilisearch' trapped in a sandbox directory with a blocked shell, demonstrating why hackers can't log in as a system user.)
-_The difference in privileges between a standard user account and an isolated system user._
-
 System users are "dummy" accounts. They exist purely to own files and run specific background processes. They have no password and cannot accept login attempts, making them immune to SSH brute-force attacks.
 
 Run this command to create the user:
@@ -454,9 +450,8 @@ This is fantastic for security, but terrible for usability if you need to manual
 
 Instead, you will use **SSH Tunneling** again, exactly like you did when previewing the frontend build. This creates a secure, temporary bridge between your local laptop and the locked-down server port.
 
-TODO
-![ILLUSTRATION NEEDED HERE](A diagram showing a developer laptop connected to the server via an SSH tunnel on port 7700, bypassing the UFW firewall, allowing the Meilisearch UI in the browser to talk directly to the protected Meilisearch instance.)
-_Using an SSH tunnel to securely access internal services without opening firewall ports._
+![An illustration showing how to manage Meilisearch securely with an SSH tunnel](./images/3_1_1_ssh_tunnel_meilisearch.png)
+_Using an SSH tunnel to securely connect to the Meilisearch server running on the production VM._
 
 Run this command on your **local computer** (not inside the server). Keep the terminal window open.
 
