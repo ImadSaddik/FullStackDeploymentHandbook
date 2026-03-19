@@ -397,7 +397,9 @@ Press `Ctrl+C` to stop watching the logs when you are done.
 
 You now have a blazing-fast search engine running in production, isolated from the outside world, and connected to your Python backend.
 
-In the next chapter, Secure management, you will learn how to maintain this database. You will set up automated daily backups to protect your data and use SSH tunneling to safely access a visual dashboard without opening any firewall ports.
+In the next chapter, **Secure management**, you will learn how to maintain this database. You will set up automated daily backups to protect your data and use SSH tunneling to safely access a visual dashboard without opening any firewall ports.
+
+## Secure management
 
 ### Schedule automatic backups
 
@@ -493,3 +495,9 @@ _Viewing the indexes and testing queries inside the production Meilisearch insta
 When you are finished managing your data, simply close the terminal window where the SSH command is running or press `Ctrl+C`.
 
 This immediately breaks the tunnel and cuts off access. Since the entire session happened inside an encrypted SSH pipe, your data remained 100% secure and was never exposed to the public internet.
+
+### What is next?
+
+Your server now has a fully functioning frontend, backend, and database. Everything is running smoothly as background services. However, users currently have to access your website using a raw IP address, and their connection is not encrypted.
+
+In **Module 4: Global delivery and app security**, you will fix this. The next chapter, **Domains and SSL**, will guide you through connecting a custom domain, configuring [DNS records](https://www.cloudflare.com/learning/dns/dns-records/), and using [Certbot](https://certbot.eff.org/) to generate free, auto-renewing [SSL certificates](https://www.cloudflare.com/learning/ssl/what-is-an-ssl-certificate/) to secure your user's traffic.
