@@ -1,4 +1,4 @@
-# Module 4: Global delivery & Security
+# Module 4: Global delivery and security
 
 ## Domains and SSL
 
