@@ -92,6 +92,8 @@ Fill in the form with the following values:
 ![An illustration showing how to create a CNAME record on Porkbun](./images/4_1_9_add_cname_record_to_dns.jpg)
 _Create a CNAME record that points the `www` subdomain to the root domain._
 
+Click **Add** to save the record.
+
 By the end, your DNS configuration should look like this:
 
 ![An illustration showing the final DNS configuration on Porkbun](./images/4_1_10_final_dns_records_look.png)
