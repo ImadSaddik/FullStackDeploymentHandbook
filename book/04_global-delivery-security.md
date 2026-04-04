@@ -159,6 +159,7 @@ Certbot will guide you through a quick interactive setup:
 
 1. It will ask for an email address. This is used strictly for urgent security notices and renewal warnings if automation fails.
 2. It will ask you to agree to the Terms of Service.
+3. It will ask if you want to share your email with the Electronic Frontier Foundation (EFF) for news and research. Skip this if you want, it is not required.
 
 Certbot will then communicate with the Let's Encrypt servers to complete a challenge verifying you control the domain. Once verified, you will see a success message:
 
