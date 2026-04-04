@@ -145,3 +145,65 @@ Successfully deployed certificate for <your_domain>.com to /etc/nginx/sites-enab
 Successfully deployed certificate for www.<your_domain>.com to /etc/nginx/sites-enabled/<your_project_name>
 Congratulations! You have successfully enabled HTTPS on https://<your_domain>.com and https://www.<your_domain>.com
 ```
+
+### Understand the Nginx changes
+
+Certbot does more than just download your certificate. It opened the Nginx configuration file you created in Chapter 2.2 and updated the code automatically.
+
+I highly recommend taking a moment to understand exactly what Certbot changed. Open your configuration file to see the new layout:
+
+```bash
+sudo nano /etc/nginx/sites-available/<your_project_name>
+```
+
+You will notice two big changes:
+
+#### The HTTPS upgrade
+
+Your original `server` block, which used to `listen 80;`, has been upgraded. Certbot changed it to `listen 443 ssl;` and injected several lines pointing to the newly downloaded cryptographic keys.
+
+```nginx
+server {
+    server_name <your_domain>.com www.<your_domain>.com;
+
+    # ... (Your location blocks for / and /api remain untouched) ...
+
+    # Certbot added these lines to handle SSL encryption
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/<your_domain>.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<your_domain>.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+```
+
+#### The HTTP redirect
+
+Because the block above now only listens on secure port 443, what happens if a user types `http://`?
+
+Certbot anticipated this and created a brand new, separate `server` block at the bottom of the file specifically to catch insecure port 80 traffic and permanently redirect it ([HTTP Status 301](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/301)) to the secure version.
+
+```nginx
+server {
+    if ($host = www.<your_domain>.com) {
+        return 301 https://$host$request_uri;
+    }
+
+    if ($host = <your_domain>.com) {
+        return 301 https://$host$request_uri;
+    }
+
+    listen 80;
+    server_name <your_domain>.com www.<your_domain>.com;
+    return 404;
+}
+```
+
+Exit the file (`Ctrl+X`).
+
+> [!TIP]
+> In Chapter 2.2, you configured your frontend Axios `baseURL` to just `/`. Because you used relative routing, you do **not** need to update your application code to handle HTTPS!
+>
+> When the browser loads the page securely over `https://`, Axios automatically inherits that secure origin for all `/api` requests.
+>
+> Furthermore, because both the frontend and backend are served from the exact same domain through Nginx, you do not have to mess with Python CORS settings. Your architecture gracefully absorbed this major security upgrade with zero code changes.
