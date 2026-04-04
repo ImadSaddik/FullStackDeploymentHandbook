@@ -41,3 +41,59 @@ You should see your new domain listed there.
 
 ![An illustration showing the domain management dashboard on Porkbun](./images/4_1_5_domain_management_dashboard.png)
 _Your newly purchased domain should be listed in the dashboard._
+
+### Configure DNS
+
+Now that you own a domain, you must tell the rest of the internet where to find your server when someone types that name into their browser. This is achieved using the [Domain Name System (DNS)](https://en.wikipedia.org/wiki/Domain_Name_System).
+
+Think of DNS as the phonebook of the internet. It translates human-readable names (like `imadsaddik.com`) into machine-readable IP addresses (like `142.93.130.134`).
+
+<!-- TODO: Don't forget to add the illustration -->
+[ILLUSTRATION NEEDED HERE](A diagram showing a user typing a domain into a browser, the browser asking a DNS server "Where is this domain?", the DNS server replying with the droplet's IP address, and the browser making the connection to the Ubuntu server.)
+
+Go to your domain provider’s dashboard and locate the **DNS records** section for your domain. If you are using **Porkbun**, locate your domain in the list. You need to hover over the domain row to reveal the options. Click on the **DNS** link to open the configuration panel.
+
+![An illustration showing how to access the DNS records configuration on Porkbun](./images/4_1_6_click_on_dns_porkbun.jpg)
+_Hover over your domain and click on the "DNS" link to access the DNS records configuration._
+
+Scroll down to the “Current Records” section. You will see some default records created by the registrar, such as `ALIAS`, `CNAME`, or `_acme-challenge` records. **Delete these default records** to ensure they do not conflict with your real server.
+
+![An illustration showing the default DNS records that need to be deleted on Porkbun](./images/4_1_7_remove_unwanted_records.jpg)
+_Delete the default records to avoid conflicts with your real server._
+
+You need to create two specific records to point your traffic to DigitalOcean:
+
+#### The A record
+
+An [A record](https://www.cloudflare.com/learning/dns/dns-records/dns-a-record/) (Address Record) maps a domain name directly to an [IPv4 address](https://en.wikipedia.org/wiki/IPv4).
+
+- **Type:** `A`
+- **Host/Name:** Leave this blank.
+- **Answer/Value:** Paste the IP address of your DigitalOcean droplet.
+- **TTL (Time To Live):** `600` (or leave as default).
+
+![An illustration showing how to create an A record on Porkbun](./images/4_1_8_add_a_record_to_dns.jpg)
+_Create an A record that points your domain to the IP address of your DigitalOcean droplet._
+
+Click **Add** to save the record.
+
+#### The CNAME record
+
+A [CNAME record](https://www.cloudflare.com/learning/dns/dns-records/dns-cname-record/) (Canonical Name Record) maps one domain name to another domain name. You use this to ensure that users who type `www` in front of your domain still reach your website.
+
+- **Type:** `CNAME`
+- **Host/Name:** `www`
+- **Answer/Value:** `<your_domain>.com`
+
+![An illustration showing how to create a CNAME record on Porkbun](./images/4_1_9_add_cname_record_to_dns.jpg)
+_Create a CNAME record that points the `www` subdomain to the root domain._
+
+By the end, your DNS configuration should look like this:
+
+![An illustration showing the final DNS configuration on Porkbun](./images/4_1_10_final_dns_records_look.png)
+_Your DNS configuration should have an A record pointing to your droplet's IP and a CNAME record pointing `www` to the root domain._
+
+> [!NOTE]
+> DNS changes can take anywhere from a few minutes to 48 hours to propagate globally. Usually, it takes less than 15 minutes. You can use a tool like [whatsmydns.net](https://www.whatsmydns.net/) to verify if the world can see your new A record.
+
+Once the DNS has propagated, you should be able to type `http://<your_domain>.com` in your browser and see your Vue.js application load.
