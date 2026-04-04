@@ -103,3 +103,45 @@ _Your DNS configuration should have an A record pointing to your droplet's IP an
 > DNS changes can take anywhere from a few minutes to 48 hours to propagate globally. Usually, it takes less than 15 minutes. You can use a tool like [whatsmydns.net](https://www.whatsmydns.net/) to verify if the world can see your new A record.
 
 Once the DNS has propagated, you should be able to type `http://<your_domain>.com` in your browser and see your Vue.js application load.
+
+### Secure the server with SSL (Certbot)
+
+Your site is accessible via your domain, but it is currently running over unencrypted HTTP. You will use [Certbot](https://certbot.eff.org/) to obtain an SSL certificate from [Let's Encrypt](https://letsencrypt.org/).
+
+Certbot is fantastic because it completely automates the complex parts: it proves you own the domain, downloads the certificate, and safely edits your Nginx configuration to enable HTTPS.
+
+#### Install Certbot
+
+SSH into your server:
+
+```bash
+ssh my-website
+```
+
+Install the Certbot client and its dedicated Nginx plugin using `apt`:
+
+```bash
+sudo apt install certbot python3-certbot-nginx -y
+```
+
+#### Obtain the certificate
+
+Run the following command, making sure to replace the placeholders with your actual domain names. This command requests certificates for both your root domain and the `www` subdomain.
+
+```bash
+sudo certbot --nginx -d <your_domain>.com -d www.<your_domain>.com
+```
+
+Certbot will guide you through a quick interactive setup:
+
+1. It will ask for an email address. This is used strictly for urgent security notices and renewal warnings if automation fails.
+2. It will ask you to agree to the Terms of Service.
+
+Certbot will then communicate with the Let's Encrypt servers to complete a challenge verifying you control the domain. Once verified, you will see a success message:
+
+```text
+Deploying certificate
+Successfully deployed certificate for <your_domain>.com to /etc/nginx/sites-enabled/<your_project_name>
+Successfully deployed certificate for www.<your_domain>.com to /etc/nginx/sites-enabled/<your_project_name>
+Congratulations! You have successfully enabled HTTPS on https://<your_domain>.com and https://www.<your_domain>.com
+```
