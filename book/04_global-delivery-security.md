@@ -124,6 +124,29 @@ Install the Certbot client and its dedicated Nginx plugin using `apt`:
 sudo apt install certbot python3-certbot-nginx -y
 ```
 
+#### Prepare Nginx
+
+Before you run Certbot, you need to tell Nginx about your new domain. Certbot reads your Nginx configuration files and looks for the `server_name` directive to know which file to secure. If it cannot find your domain, it will fall back to the default file and mess up your setup.
+
+Open the Nginx configuration file you created in Chapter 2.2:
+
+```bash
+sudo nano /etc/nginx/sites-available/<your_project_name>
+```
+
+Find the `server_name` line. Change the IP address to match your new root domain and `www` subdomain:
+
+```nginx
+server_name <your_domain>.com www.<your_domain>.com;
+```
+
+Save and exit the file. Then, test the configuration to make sure there are no typos, and reload Nginx so it registers your new domain:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
 #### Obtain the certificate
 
 Run the following command, making sure to replace the placeholders with your actual domain names. This command requests certificates for both your root domain and the `www` subdomain.
