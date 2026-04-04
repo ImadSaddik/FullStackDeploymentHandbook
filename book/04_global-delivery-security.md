@@ -67,6 +67,8 @@ You need to create two specific records to point your traffic to DigitalOcean:
 
 An [A record](https://www.cloudflare.com/learning/dns/dns-records/dns-a-record/) (Address Record) maps a domain name directly to an [IPv4 address](https://en.wikipedia.org/wiki/IPv4).
 
+Fill in the form with the following values:
+
 - **Type:** `A`
 - **Host/Name:** Leave this blank.
 - **Answer/Value:** Paste the IP address of your DigitalOcean droplet.
@@ -80,6 +82,8 @@ Click **Add** to save the record.
 #### The CNAME record
 
 A [CNAME record](https://www.cloudflare.com/learning/dns/dns-records/dns-cname-record/) (Canonical Name Record) maps one domain name to another domain name. You use this to ensure that users who type `www` in front of your domain still reach your website.
+
+Fill in the form with the following values:
 
 - **Type:** `CNAME`
 - **Host/Name:** `www`
