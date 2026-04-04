@@ -48,17 +48,17 @@ Now that you own a domain, you must tell the rest of the internet where to find 
 
 Think of DNS as the phonebook of the internet. It translates human-readable names (like `imadsaddik.com`) into machine-readable IP addresses (like `142.93.130.134`).
 
-<!-- TODO: Don't forget to add the illustration -->
-[ILLUSTRATION NEEDED HERE](A diagram showing a user typing a domain into a browser, the browser asking a DNS server "Where is this domain?", the DNS server replying with the droplet's IP address, and the browser making the connection to the Ubuntu server.)
+![An illustration showing how DNS works](./images/4_1_6_dns_resolution_illustration.png)
+_DNS resolution process: The user types a domain, the browser queries the DNS server, the DNS server returns the IP address, and the browser connects to the server._
 
 Go to your domain provider’s dashboard and locate the **DNS records** section for your domain. If you are using **Porkbun**, locate your domain in the list. You need to hover over the domain row to reveal the options. Click on the **DNS** link to open the configuration panel.
 
-![An illustration showing how to access the DNS records configuration on Porkbun](./images/4_1_6_click_on_dns_porkbun.jpg)
+![An illustration showing how to access the DNS records configuration on Porkbun](./images/4_1_7_click_on_dns_porkbun.jpg)
 _Hover over your domain and click on the "DNS" link to access the DNS records configuration._
 
 Scroll down to the “Current Records” section. You will see some default records created by the registrar, such as `ALIAS`, `CNAME`, or `_acme-challenge` records. **Delete these default records** to ensure they do not conflict with your real server.
 
-![An illustration showing the default DNS records that need to be deleted on Porkbun](./images/4_1_7_remove_unwanted_records.jpg)
+![An illustration showing the default DNS records that need to be deleted on Porkbun](./images/4_1_8_remove_unwanted_records.jpg)
 _Delete the default records to avoid conflicts with your real server._
 
 You need to create two specific records to point your traffic to DigitalOcean:
@@ -74,7 +74,7 @@ Fill in the form with the following values:
 - **Answer/Value:** Paste the IP address of your DigitalOcean droplet.
 - **TTL (Time To Live):** `600` (or leave as default).
 
-![An illustration showing how to create an A record on Porkbun](./images/4_1_8_add_a_record_to_dns.jpg)
+![An illustration showing how to create an A record on Porkbun](./images/4_1_9_add_a_record_to_dns.jpg)
 _Create an A record that points your domain to the IP address of your DigitalOcean droplet._
 
 Click **Add** to save the record.
@@ -89,14 +89,14 @@ Fill in the form with the following values:
 - **Host/Name:** `www`
 - **Answer/Value:** `<your_domain>.com`
 
-![An illustration showing how to create a CNAME record on Porkbun](./images/4_1_9_add_cname_record_to_dns.jpg)
+![An illustration showing how to create a CNAME record on Porkbun](./images/4_1_10_add_cname_record_to_dns.jpg)
 _Create a CNAME record that points the `www` subdomain to the root domain._
 
 Click **Add** to save the record.
 
 By the end, your DNS configuration should look like this:
 
-![An illustration showing the final DNS configuration on Porkbun](./images/4_1_10_final_dns_records_look.png)
+![An illustration showing the final DNS configuration on Porkbun](./images/4_1_11_final_dns_records_look.png)
 _Your DNS configuration should have an A record pointing to your droplet's IP and a CNAME record pointing `www` to the root domain._
 
 > [!NOTE]
