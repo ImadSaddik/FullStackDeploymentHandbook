@@ -202,7 +202,7 @@ server {
 Exit the file (`Ctrl+X`).
 
 > [!TIP]
-> In Chapter 2.2, you configured your frontend Axios `baseURL` to just `/`. Because you used relative routing, you do **not** need to update your application code to handle HTTPS!
+> In Chapter 2.2, you configured your frontend Axios `baseURL` to just `/`. Because you used relative routing, you do not need to update your application code to handle HTTPS!
 >
 > When the browser loads the page securely over `https://`, Axios automatically inherits that secure origin for all `/api` requests.
 >
