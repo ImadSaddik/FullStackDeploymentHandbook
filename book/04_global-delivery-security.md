@@ -371,7 +371,7 @@ To make Cloudflare your CDN, you must hand over control of your DNS routing. Clo
 
 To do this, head over to your Porkbun dashboard and locate your domain. Hover over it and click the **NS** label to open your nameserver settings. A popup will appear showing the default Porkbun nameservers. Go ahead and delete all of them.
 
-Next, paste the two new Cloudflare nameservers you just received, making sure you put each one on a separate line. Finally, hit Submit to apply your changes.
+Next, paste the two new Cloudflare nameservers you just received, making sure you put each one on a separate line. Finally, hit **Submit** to apply your changes.
 
 ![An illustration showing how to change the nameservers on Porkbun](./images/4_2_6_change_nameservers_porkbun.png)
 _Delete the old nameservers and replace them with the new ones provided by Cloudflare._
@@ -379,6 +379,7 @@ _Delete the old nameservers and replace them with the new ones provided by Cloud
 Return to the Cloudflare dashboard and click **Continue**.
 
 ![An illustration showing the continue button after changing nameservers on Cloudflare](./images/4_2_7_continue_after_nameservers_cloudflare.png)
+_After updating the nameservers, click "Continue" to let Cloudflare verify the changes._
 
 You will arrive at the overview page. Click the **Check nameservers now** button. DNS changes take time to propagate across the internet. This process usually finishes in a few minutes, but it can occasionally take up to an hour.
 
