@@ -308,3 +308,23 @@ Your website is now live on your custom domain and fully secure.
 However, there is one problem you cannot fix with code: physical distance. Right now, if your server is in Germany, a user in Australia will experience a delay because the data has to travel across the globe.
 
 In the next chapter, **Chapter 4.2: The CDN layer**, you will learn how to solve this. You will integrate [Cloudflare](https://www.cloudflare.com/) to cache your files on servers all around the world, making your site load quickly everywhere. You will also learn how to configure Nginx to correctly log your visitors' real IP addresses.
+
+## The CDN layer and caching
+
+### Introduction
+
+At the end of the previous subchapter, we talked about how physical distance creates unavoidable latency. If your server is located in [Meknès](https://fr.wikipedia.org/wiki/Mekn%C3%A8s), Morocco, a user in [Oujda](https://en.wikipedia.org/wiki/Oujda) will see your site load in milliseconds. But when a user in Sydney, Australia, or Beijing, China, tries to access it, the request has to travel through [fiber-optic cables](https://en.wikipedia.org/wiki/Fiber-optic_cable) across oceans and continents.
+
+To visualize this, I used the [Free Website Uptime Test](https://www.uptrends.com/tools/uptime) by [Uptrends](https://www.uptrends.com/) to check how fast different cities can connect to the server. The results clearly show the impact of physical distance.
+
+![This image shows latency test results before enabling Cloudflare](./images/4_2_1_latency_before_cloudflare.png)
+_Latency test results showing fast connections nearby (0.1s) but high delays in Beijing (3.9s) and other places._
+
+Since the server is local, a nearby user sees the site load almost instantly. However, a user in Beijing has to wait for the signal to travel halfway around the world, which takes over 3.9 seconds. This makes the site feel sluggish for them.
+
+To solve this, you need a [Content Delivery Network (CDN)](https://www.cloudflare.com/learning/cdn/what-is-a-cdn/). A CDN sits between your users and your server. It caches your static files (like your built HTML, CSS, and images) on thousands of [edge servers](https://www.akamai.com/glossary/what-is-an-edge-server) (servers placed on the outer edges of the network, physically close to the users) worldwide. When a user in Sydney visits your site, they download the frontend from a server in Australia or nearby, not all the way from Morocco.
+
+<!-- TODO -->
+<!-- [ILLUSTRATION NEEDED HERE] (A world map showing a user in Sydney connecting to a nearby edge node, while the edge node communicates with the origin server in Meknes. Use arrows and maybe a stopwatch icon to visually contrast the short distance to the edge node versus the long distance to the origin server.) -->
+
+In this subchapter, you will integrate [Cloudflare](https://www.cloudflare.com/) to globally distribute your frontend. You will also configure Nginx to implement aggressive caching strategies for your [Single Page Application (SPA)](https://developer.mozilla.org/en-US/docs/Glossary/SPA) and fix a common [SEO](https://en.wikipedia.org/wiki/Search_engine_optimization) and performance issue known as [Soft 404s](https://developers.google.com/search/blog/2008/08/farewell-to-soft-404s).
