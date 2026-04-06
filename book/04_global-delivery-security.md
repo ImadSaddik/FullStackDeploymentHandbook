@@ -352,3 +352,35 @@ In the plan selection page, choose the **Free** plan. It includes everything you
 
 ![An illustration showing the plan selection page on Cloudflare](./images/4_2_4_select_free_plan_cloudflare.png)
 _Select the Free plan, which is sufficient for personal websites and side projects._
+
+#### Review and proxy your DNS records
+
+The next screen is very important. Cloudflare will list the DNS records it found. You need to verify their proxy status.
+
+- **Web traffic (A and CNAME records):** Ensure the proxy status is toggled on. You should see an **orange cloud**. This tells Cloudflare to intercept the traffic, cache your files, and hide your server's real IP address from the public.
+- **Email traffic (MX and TXT records):** If you have records for email, they must be set to "DNS only" with a **gray cloud**. Cloudflare proxies HTTP and HTTPS web traffic, not email traffic. If you proxy your mail records, your email will stop working.
+
+Finally, look for the **NS (Nameserver)** records pointing to `porkbun.com`. You must delete these from the list because you are about to replace them.
+
+![An illustration showing the DNS records review page on Cloudflare](./images/4_2_5_review_dns_records_cloudflare.png)
+_Review the DNS records. Make sure your A and CNAME records are proxied (orange cloud), and delete any NS records pointing to your old registrar._
+
+#### Hand over DNS authority
+
+To make Cloudflare your CDN, you must hand over control of your DNS routing. Cloudflare will provide you with two new nameservers (for example, `paige.ns.cloudflare.com` and `yevgen.ns.cloudflare.com`).
+
+To do this, head over to your Porkbun dashboard and locate your domain. Hover over it and click the **NS** label to open your nameserver settings. A popup will appear showing the default Porkbun nameservers. Go ahead and delete all of them.
+
+Next, paste the two new Cloudflare nameservers you just received, making sure you put each one on a separate line. Finally, hit Submit to apply your changes.
+
+![An illustration showing how to change the nameservers on Porkbun](./images/4_2_6_change_nameservers_porkbun.png)
+_Delete the old nameservers and replace them with the new ones provided by Cloudflare._
+
+Return to the Cloudflare dashboard and click **Continue**.
+
+![An illustration showing the continue button after changing nameservers on Cloudflare](./images/4_2_7_continue_after_nameservers_cloudflare.png)
+
+You will arrive at the overview page. Click the **Check nameservers now** button. DNS changes take time to propagate across the internet. This process usually finishes in a few minutes, but it can occasionally take up to an hour.
+
+![An illustration showing the nameservers check page on Cloudflare](./images/4_2_8_check_nameservers_cloudflare.png)
+_Click "Check nameservers now" to verify that Cloudflare has taken control of your DNS. This may take a few minutes to complete._
