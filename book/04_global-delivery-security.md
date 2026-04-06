@@ -430,3 +430,20 @@ If you want an extra check, you can also use the [whatsmydns.net](https://www.wh
 
 ![An illustration showing the global nameservers check on whatsmydns.net](./images/4_2_12_check_nameservers_whatsmydns.png)
 _Use whatsmydns.net to verify that your new Cloudflare nameservers are active globally. You should see them appearing in multiple locations around the world._
+
+### Verify the speed
+
+Now for the best part. Once everything is set, run the global speed test again to see the difference.
+
+![An illustration showing the latency test results after enabling Cloudflare](./images/4_2_13_latency_after_cloudflare.png)
+_The latency test results after enabling Cloudflare show a huge improvement, especially in distant locations like Beijing, which dropped from 3.9s to 1.5s._
+
+The improvement is massive:
+
+- **Montreal:** Dropped from 0.6s to **0.4s**.
+- **Tokyo:** Dropped from 1.3s to **0.3s**.
+- **Seoul:** Dropped from 1.3s to **0.4s**.
+- **Jakarta:** Dropped from 1.4s to **0.3s**.
+- **Beijing:** Dropped from 3.9s to **1.5s**.
+
+Your website now loads almost instantly for users all over the world.
