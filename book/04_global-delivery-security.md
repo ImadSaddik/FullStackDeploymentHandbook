@@ -634,3 +634,18 @@ But if a user visits a broken link like `https://<your_domain>.com/broken-articl
 
 ![An illustration showing the Vue Router 404 page when visiting a non-existent route](./images/4_2_15_vue_router_404.png)
 _The fallback Vue Router 404 page. Because the file is not blocked by Nginx, the frontend application loads and handles the missing route gracefully._
+
+### Pros and cons
+
+Before wrapping up, let's summarize what you gained and what you risked by adding this CDN layer.
+
+The benefits:
+
+- **Speed:** Your frontend loads instantly for users everywhere.
+- **Security:** Cloudflare hides your real server IP and provides basic [DDoS](https://en.wikipedia.org/wiki/Denial-of-service_attack) protection.
+- **Bandwidth:** It saves you money by serving images and scripts from their cache instead of your server.
+
+The downsides:
+
+- **Complexity:** You have introduced a middleman. If your site goes down, you now have to check if the issue is with DigitalOcean or Cloudflare.
+- **Dynamic latency:** While your frontend is fast, your backend API requests still need to travel the full distance to your server. Cloudflare cannot speed up the database query itself, only the network path to reach it.
