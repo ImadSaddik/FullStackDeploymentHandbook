@@ -579,3 +579,58 @@ add_header Cache-Control "public, max-age=31536000, immutable";
 - **immutable:** A powerful instruction that tells the browser the file will never change. This stops the browser from even asking the server if the file is up to date, resulting in instant load times.
 
 With this configuration, your users will always fetch the freshest `index.html` file upon navigating to your site, ensuring they get your latest features immediately, while the heavy lifting (downloading Vue, your compiled components, and images) is cached efficiently at the edge.
+
+### Fix soft 404 vulnerabilities and block bots
+
+Because of how the SPA fallback block (`location /`) works, any request to a non-existent file on your server gets redirected to `index.html`.
+
+If a hacker or a malicious bot scans your server looking for sensitive files like `/.env`, `/.git/config`, or `/wp-login.php`, Nginx does not block them. Instead, it serves them your Vue `index.html` file and returns a successful HTTP `200 OK` status.
+
+To a human, it looks like a "Page Not Found" screen rendered by Vue Router. To a bot or Google's search crawler, your server just said, "Yes, this `.env` file exists and here is the content!". This is known as a [Soft 404](https://developers.google.com/search/blog/2008/08/farewell-to-soft-404s), and it wastes your server's resources while severely confusing search engines.
+
+You need to set a strict boundary. Nginx should block known malicious requests instantly, returning a hard `404 Not Found` or `403 Forbidden`, preventing them from ever reaching your Vue application.
+
+Add these security blocks to your configuration, placing them right above your `location /` blocks:
+
+```nginx
+# Deny access to files starting with a dot (like .env or .git)
+# EXCEPTION: Allow .well-known for Certbot SSL renewals!
+location ~ /\.(?!well-known).* {
+    deny all;
+    access_log off;
+    log_not_found off;
+    return 404;
+}
+
+# Immediately drop requests for PHP, backups, or CMS admin panels
+location ~* \.(php|pl|py|jsp|asp|sh|cgi|bak|old|sql|conf|ini|zip|tar|gz)$|/(wp-admin|wp-includes|node_modules) {
+    access_log off;
+    log_not_found off;
+    return 404;
+}
+```
+
+You might notice the `access_log off;` and `log_not_found off;` lines inside those blocks. These are there to keep your server logs clean. Since bots scan these common URLs thousands of times a day, recording every single blocked attempt would just waste your disk space.
+
+> [!WARNING]
+> The regex `\.(?!well-known).*` is important. If you block all dot-files, you will block the `/.well-known/acme-challenge/` directory. If you do that, Certbot will not be able to verify your domain, and your SSL certificates will fail to renew, breaking your site after 90 days.
+
+> [!NOTE]
+> Learn more about the [/.well-known](https://en.wikipedia.org/wiki/Well-known_URI) directory and its role in SSL certificate verification.
+
+Save the file and test your Nginx configuration:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Now, if you try to visit `https://<your_domain>.com/.env`, Nginx will instantly step in and return a raw server 404 error page.
+
+![An illustration showing the raw 404 error page when trying to access a blocked file](./images/4_2_14_blocked_file_404.png)
+_The raw Nginx 404 response. Notice there is no Vue styling, proving the server blocked the request before it ever reached the frontend code._
+
+But if a user visits a broken link like `https://<your_domain>.com/broken-article`, Nginx will gracefully pass it to Vue Router, providing a good user experience.
+
+![An illustration showing the Vue Router 404 page when visiting a non-existent route](./images/4_2_15_vue_router_404.png)
+_The fallback Vue Router 404 page. Because the file is not blocked by Nginx, the frontend application loads and handles the missing route gracefully._
