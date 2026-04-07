@@ -649,3 +649,11 @@ The downsides:
 
 - **Complexity:** You have introduced a middleman. If your site goes down, you now have to check if the issue is with DigitalOcean or Cloudflare.
 - **Dynamic latency:** While your frontend is fast, your backend API requests still need to travel the full distance to your server. Cloudflare cannot speed up the database query itself, only the network path to reach it.
+
+### What is next?
+
+Your website is now globally distributed, fast, and protected by Cloudflare's network. You have successfully finished the performance setup.
+
+However, before we move on to automating your deployments, we need to ensure your server is completely locked down against hackers and automated scanners.
+
+In the next subchapter, **Chapter 4.3: Vulnerability Scanning**, you will learn how to test your own defenses. You will use [OWASP ZAP](https://www.zaproxy.org/) to perform [Dynamic Application Security Testing (DAST)](https://en.wikipedia.org/wiki/Dynamic_application_security_testing) on your web application, and you will configure Nginx to explicitly block malicious bots from hunting for sensitive system files like `.env` and `.git`.
