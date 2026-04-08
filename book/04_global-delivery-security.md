@@ -516,7 +516,7 @@ While this command is running, open your website in your browser. Look at the fi
 - **Before the fix:** You would see a Cloudflare IP address (like `172.70.240.61`) for every single request.
 - **After the fix:** You should now see your own [ISP](https://en.wikipedia.org/wiki/Internet_service_provider)'s IP address.
 
-This confirms that Nginx is successfully "unwrapping" the connection. Your Nginx logs, your GoAccess analytics, and your FastAPI application will now see the actual IP addresses of your users.
+Your Nginx logs and your FastAPI application will now see the actual IP addresses of your users.
 
 ### Optimize Nginx caching for SPAs
 
