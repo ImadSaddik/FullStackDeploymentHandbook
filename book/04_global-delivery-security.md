@@ -324,8 +324,8 @@ Since the server is local, a nearby user sees the site load almost instantly. Ho
 
 To solve this, you need a [Content Delivery Network (CDN)](https://www.cloudflare.com/learning/cdn/what-is-a-cdn/). A CDN sits between your users and your server. It caches your static files (like your built HTML, CSS, and images) on thousands of [edge servers](https://www.akamai.com/glossary/what-is-an-edge-server) (servers placed on the outer edges of the network, physically close to the users) worldwide. When a user in Sydney visits your site, they download the frontend from a server in Australia or nearby, not all the way from Morocco.
 
-<!-- TODO -->
-<!-- [ILLUSTRATION NEEDED HERE] (A world map showing a user in Sydney connecting to a nearby edge node, while the edge node communicates with the origin server in Meknes. Use arrows and maybe a stopwatch icon to visually contrast the short distance to the edge node versus the long distance to the origin server.) -->
+![A two-part diagram comparing network routing on a world map. The top section shows users across the globe connecting directly to a single origin server, with long lines and high latency times like 3.9 seconds. The bottom section shows users connecting to nearby edge servers with short lines and fast times like 0.1 seconds, while dashed lines connect the edge servers back to the origin.](./images/4_2_1_b_before_and_after_cdn.png)
+_Notice how the edge servers intercept the traffic. By serving files locally, the long 3.9-second trip across the globe is bypassed, dropping the user's wait time down to just a fraction of a second._
 
 In this subchapter, you will integrate [Cloudflare](https://www.cloudflare.com/) to globally distribute your frontend. You will also configure Nginx to implement aggressive caching strategies for your [Single Page Application (SPA)](https://developer.mozilla.org/en-US/docs/Glossary/SPA).
 
