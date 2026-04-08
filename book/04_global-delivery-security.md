@@ -452,7 +452,7 @@ Your website now loads almost instantly for users all over the world.
 
 Now that traffic is routing through Cloudflare, a hidden issue arises. Both your Nginx logs and your Python application will see Cloudflare's IP address instead of the actual visitor's IP. This breaks your analytics and ruins any geolocation tracking.
 
-Instead of writing complex Python code to extract the real IP from request headers, you can configure Nginx to "unwrap" the connection globally at the server level.
+Instead of writing complex Python code to extract the real IP from request headers, you can configure Nginx to unwrap the connection globally at the server level.
 
 Create a new configuration file in Nginx's `conf.d` directory. Nginx automatically loads any file placed in this folder.
 
