@@ -454,6 +454,9 @@ Now that traffic is routing through Cloudflare, a hidden issue arises. Both your
 
 Instead of writing complex Python code to extract the real IP from request headers, you can configure Nginx to unwrap the connection globally at the server level.
 
+![Diagram showing how Cloudflare masks the user's real IP address and how Nginx uses the CF-Connecting-IP header to restore it for the backend.](./images/4_2_14_cloudflare_real_ip.png)
+_By default, your backend only sees Cloudflare's IP. Configuring Nginx to read the CF-Connecting-IP header restores the true visitor IP._
+
 Create a new configuration file in Nginx's `conf.d` directory. Nginx automatically loads any file placed in this folder.
 
 ```bash
