@@ -576,7 +576,7 @@ add_header Cache-Control "public, max-age=31536000, immutable";
 
 - **public:** Allows anyone, including Cloudflare's edge servers, to cache the files.
 - **max-age=31536000:** Tells the browser to keep the file in its cache for exactly one year (31,536,000 seconds).
-- **immutable:** A powerful instruction that tells the browser the file will never change. This stops the browser from even asking the server if the file is up to date, resulting in instant load times.
+- **immutable:** An instruction that tells the browser the file will never change. This stops the browser from even asking the server if the file is up to date, resulting in instant load times.
 
 With this configuration, your users will always fetch the freshest `index.html` file upon navigating to your site, ensuring they get your latest features immediately, while the heavy lifting (downloading Vue, your compiled components, and images) is cached efficiently at the edge.
 
