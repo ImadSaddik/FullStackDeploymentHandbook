@@ -706,3 +706,11 @@ Here is how to interpret your security report:
 - **`Not shown: 97 filtered tcp ports`**: This is the proof that your setup works. It means UFW successfully blocked connection attempts to every other port on the list.
 
 This result confirms that even though your FastAPI backend is listening on port `8000` and your Meilisearch instance is running on port `7700`, no one can access them directly from the internet. They are perfectly insulated behind the firewall.
+
+### What is next?
+
+Your manual deployment is now complete, optimized, and thoroughly tested against vulnerabilities. You have a rock-solid foundation.
+
+However, deploying manually every time you write new code is tedious and error-prone. In **Module 5: The automation pipeline**, you will shift focus from manual server management to [continuous integration and delivery (CI/CD)](https://about.gitlab.com/topics/ci-cd/).
+
+In the next chapter, **Chapter 5.1: Local hygiene**, you will learn how to enforce code quality at the source. You will configure **Branch protection rules** to protect your master branch from accidental pushes, and you will set up **Pre-commit hooks** (using [Ruff](https://docs.astral.sh/ruff/) for Python and [ESLint](https://eslint.org/) for JavaScript/Vue) to automatically format your code and catch linting errors before a commit is even created.
