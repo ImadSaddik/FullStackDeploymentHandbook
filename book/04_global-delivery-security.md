@@ -668,3 +668,41 @@ But if a user visits a broken link like `https://<your_domain>.com/broken-articl
 
 ![An illustration showing the Vue Router 404 page when visiting a non-existent route](./images/4_3_2_vue_router_404.png)
 _The fallback Vue Router 404 page. Because the file is not blocked by Nginx, the frontend application loads and handles the missing route gracefully._
+
+### Scan the server from the outside
+
+Checking your firewall rules from inside the server is a good start, but scanning it from the outside is the only way to know the truth. This process simulates an attacker's perspective, revealing exactly which ports are exposed to the public internet.
+
+To do this, use [nmap](https://nmap.org/), an industry-standard network scanning tool.
+
+> [!IMPORTANT]
+> Run this command **from your local machine**, not from your DigitalOcean droplet. If you do not have it installed, you can get it via `sudo apt install nmap`.
+
+```bash
+nmap -F <your_domain>.com
+```
+
+The `-F` flag runs a "Fast" scan, checking only the 100 most common network ports instead of all 65,535.
+
+If your server is properly secured, the output should look exactly like this:
+
+```text
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-10-31 21:39 +01
+Nmap scan report for <your_domain>.com (<your_droplet_ip>)
+Host is up (0.051s latency).
+Not shown: 97 filtered tcp ports (no-response)
+PORT      STATE SERVICE
+22/tcp    open  ssh
+80/tcp    open  http
+443/tcp   open  https
+
+Nmap done: 1 IP address (1 host up) scanned in 2.38 seconds
+```
+
+Here is how to interpret your security report:
+
+- **`Host is up`**: Your server is online and responding to basic network routing.
+- **`PORT 22, 80, 443`**: Only the absolute minimum required ports are openSSH for your access, and HTTP/HTTPS for web traffic.
+- **`Not shown: 97 filtered tcp ports`**: This is the proof that your setup works. It means UFW successfully blocked connection attempts to every other port on the list.
+
+This result confirms that even though your FastAPI backend is listening on port `8000` and your Meilisearch instance is running on port `7700`, no one can access them directly from the internet. They are perfectly insulated behind the firewall.
