@@ -622,6 +622,9 @@ If a hacker or a malicious bot scans your server looking for sensitive files lik
 
 To a human, it looks like a "Page Not Found" screen rendered by Vue Router. To a bot or Google's search crawler, your server just said, "Yes, this `.env` file exists and here is the content!". This is known as a [Soft 404](https://developers.google.com/search/blog/2008/08/farewell-to-soft-404s), and it wastes your server's resources while severely confusing search engines.
 
+![Diagram showing how Nginx routes a bad request to index.html resulting in a 200 OK, versus the secure setup which explicitly returns a 404 error.](./images/4_3_1_soft_404_trap.png)
+_The Soft 404 trap: Nginx fails to serve `.env` but takes the bot to `index.html`, resolving with a 200 HTTP status code. Bots will think they got access to the file and will keep hammering your web server._
+
 You need to set a strict boundary. Nginx should block known malicious requests instantly, returning a hard `404 Not Found` or `403 Forbidden`, preventing them from ever reaching your Vue application.
 
 Add these security blocks to your configuration, placing them right above your `location /` blocks:
