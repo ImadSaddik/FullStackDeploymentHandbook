@@ -661,12 +661,12 @@ sudo systemctl reload nginx
 
 Now, if you try to visit `https://<your_domain>.com/.env`, Nginx will instantly step in and return a raw server 404 error page.
 
-![An illustration showing the raw 404 error page when trying to access a blocked file](./images/4_3_1_blocked_file_404.png)
+![An illustration showing the raw 404 error page when trying to access a blocked file](./images/4_3_2_blocked_file_404.png)
 _The raw Nginx 404 response. Notice there is no Vue styling, proving the server blocked the request before it ever reached the frontend code._
 
 But if a user visits a broken link like `https://<your_domain>.com/broken-article`, Nginx will gracefully pass it to Vue Router, providing a good user experience.
 
-![An illustration showing the Vue Router 404 page when visiting a non-existent route](./images/4_3_2_vue_router_404.png)
+![An illustration showing the Vue Router 404 page when visiting a non-existent route](./images/4_3_3_vue_router_404.png)
 _The fallback Vue Router 404 page. Because the file is not blocked by Nginx, the frontend application loads and handles the missing route gracefully._
 
 ### Scan the server from the outside
