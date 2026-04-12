@@ -604,7 +604,9 @@ Your website is now globally distributed, fast, and protected by Cloudflare's ne
 
 However, before we move on to automating your deployments, we need to ensure your server is completely locked down against hackers and automated scanners.
 
-In the next subchapter, **Chapter 4.3: Vulnerability Scanning**, you will learn how to test your own defenses. You will use [OWASP ZAP](https://www.zaproxy.org/) to perform [Dynamic Application Security Testing (DAST)](https://en.wikipedia.org/wiki/Dynamic_application_security_testing) on your web application, and you will configure Nginx to explicitly block malicious bots from hunting for sensitive system files like `.env` and `.git`.
+In the next subchapter, **Chapter 4.3: Vulnerability Scanning**, you will configure Nginx to explicitly block malicious bots from hunting for sensitive system files like `.env` and `.git`.
+
+You will also learn how to use [nmap](https://nmap.org/) to scan your server from the outside and verify that your firewall is doing its job.
 
 ## Vulnerability scanning
 
@@ -612,7 +614,7 @@ In the next subchapter, **Chapter 4.3: Vulnerability Scanning**, you will learn 
 
 In the previous sections, you secured your server with a firewall, SSH keys, and HTTP headers. But how do you know if your defenses actually work? The best way to find out is to attack your own server.
 
-In this section, you will learn how to block malicious bots from reading sensitive files, use [nmap](https://nmap.org/) to verify your firewall rules, and perform Dynamic Application Security Testing (DAST) using [OWASP ZAP](https://www.zaproxy.org/) to find vulnerabilities in your running application.
+In this section, you will learn how to block malicious bots from reading sensitive files and use [nmap](https://nmap.org/) to verify your firewall rules.
 
 ### Fix soft 404 vulnerabilities and block bots
 
