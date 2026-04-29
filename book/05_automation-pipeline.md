@@ -12,7 +12,7 @@ In this subchapter, we will focus on enforcing code quality at the source. This 
 
 ### Protect the default branch
 
-Since you will be pushing code from your `main` or `master` branch, you should set up branch protection. This is an important practice to ensure broken code doesn't make its way into production by mistake.
+Since you will be pushing code from your `main` or `master` branch, you should set up branch protection. This is an important practice to prevent broken code from making its way into production by mistake.
 
 If your repository is public, you can secure a branch on GitHub for free. To begin, open your repository and click the **Settings** tab.
 
@@ -207,4 +207,4 @@ Your local environment is now fully secure. By protecting your main branch and e
 
 However, local checks only run on your specific laptop. To ensure absolute code quality, you need an isolated environment to verify the code automatically.
 
-In the next subchapter, **Chapter 5.2: Continuous Integration**, you will take this automation to the cloud. You will configure [GitHub Actions](https://github.com/features/actions) to run these exact linting checks, alongside your unit tests, ensuring that no pull request can be merged unless the code is passes all checks.
+In the next subchapter, **Chapter 5.2: Continuous Integration**, you will take this automation to the cloud. You will configure [GitHub Actions](https://github.com/features/actions) to run these exact linting checks, alongside your unit tests, ensuring that no pull request can be merged unless the code passes all checks.
