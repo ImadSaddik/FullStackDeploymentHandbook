@@ -60,4 +60,14 @@ To https://github.com/ImadSaddik/ImadSaddikWebsite.git
 error: failed to push some refs to 'https://github.com/ImadSaddik/ImadSaddikWebsite.git'
 ```
 
-This means your lock is working perfectly. From now on, you will create a new branch for your features, commit your work there, and open a Pull Request to merge it into the main branch.
+This means your lock is working perfectly. From now on, you will create a new branch for your features, commit your work there, and open a pull request to merge it into the main branch.
+
+### Catch errors early with pre-commit hooks
+
+You have locked the door to your main branch, but you still need a gatekeeper to check what goes into your local commits.
+
+Git has a built-in feature called [hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks). These are hidden scripts that run automatically when you perform actions like committing or pushing code. However, writing and managing custom shell scripts for every single developer on a project is a nightmare.
+
+This is where the [pre-commit](https://pre-commit.com/) framework comes in. It is a tool that manages these hooks for you. Instead of writing complex bash scripts, you just create a simple YAML configuration file. The framework reads this file, downloads the necessary tools, and runs them against your code right before a commit is created.
+
+If your code has syntax errors, messy formatting, or unused variables, the hook blocks the commit entirely. This forces you to fix the issues locally, keeping your Git history clean and saving your cloud CI/CD pipeline from wasting time on simple typos.
