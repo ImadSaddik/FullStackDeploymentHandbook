@@ -14,15 +14,15 @@ In this subchapter, we will focus on enforcing code quality at the source. This 
 
 Since you will be pushing code from your `main` or `master` branch, you should set up branch protection. This is an important practice to ensure broken code doesn't make its way into production by mistake.
 
-If your repository is public, you can secure a branch on GitHub for free. To begin, open your repository and click on the settings tab.
+If your repository is public, you can secure a branch on GitHub for free. To begin, open your repository and click the **Settings** tab.
 
 ![Screenshot highlighting the Settings tab in the GitHub repository navigation bar](./images/5_1_1_github_settings_tab.png)
-_Click the settings tab in your GitHub repository._
+_Click the **Settings** tab in your GitHub repository._
 
 Look for the "Code and automation" section in the left sidebar and click **Branches**.
 
 ![Screenshot showing the Branches option under the Code and automation section in the sidebar](./images/5_1_2_branches_menu.png)
-_Click on **Branches** under the **Code and automation** section._
+_Click the **Branches** option under the **Code and automation** section._
 
 Click **Add branch ruleset**. This feature allows you to define safety rules for your important branches. It controls how code is merged, ensuring you cannot accidentally delete the branch or push unreviewed code.
 
@@ -43,7 +43,7 @@ In the **Branch rules** section, enable the following settings:
 > [!NOTE]
 > Setting required approvals to `0` is a good strategy for solo developers. It forces you to open a Pull Request, which builds a great habit and documents your project history, but it lets you merge it yourself immediately without waiting for a second person to approve it. If you are working on a team, you would set this to 1 or 2.
 
-Click on the **Create** button to save your ruleset.
+Click the **Create** button to save your ruleset.
 
 ![Screenshot showing the selected branch rules and the Create button](./images/5_1_5_branch_rules_checkboxes.png)
 _Select the essential protection rules and click **Create**._
