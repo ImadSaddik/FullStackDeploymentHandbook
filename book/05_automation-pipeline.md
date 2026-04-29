@@ -141,3 +141,50 @@ This section introduces a few advanced concepts:
 - **The local repository**: Notice that Prettier is listed as a `local` repository instead of a GitHub URL. Sometimes, relying on the Node.js tools already installed on your system is much faster and more reliable than making the framework download a fresh copy. This hook simply runs `npx prettier --write` directly on your frontend assets.
 
 Your complete `.pre-commit-config.yaml` file should now contain both the Python and JavaScript blocks perfectly integrated.
+
+### Install and test the hooks
+
+Your configuration file is complete, but right now, it is just a plain text file. You need to install the pre-commit framework so it can read your YAML file and link those tools to your Git repository.
+
+Open your terminal on your **local computer** (do not SSH into your DigitalOcean droplet for this step). Ensure you are in the root directory of your project and activate your Python virtual environment.
+
+```bash
+# Create a virtual environment if you haven't already
+python3 -m venv venv
+
+# Activate it
+source venv/bin/activate
+```
+
+Install the pre-commit package using `pip`.
+
+```bash
+pip install pre-commit
+```
+
+Next, tell the framework to read your `.pre-commit-config.yaml` file and install the hooks into your hidden `.git` directory.
+
+```bash
+pre-commit install
+```
+
+When you run this, the framework places a small script inside `.git/hooks/pre-commit`. This script acts as a trigger: from now on, whenever you type `git commit`, this script will intercept the commit process and run your linters and formatters first.
+
+To verify that everything is working properly, you should manually trigger the hooks across your entire project right now.
+
+```bash
+pre-commit run --all-files
+```
+
+The first time you run this, it will take a minute or two because the framework has to download Ruff, ESLint, and the Node.js dependencies. Once it finishes, it will scan your files and output a checklist.
+
+The output in your terminal should look similar to this:
+
+```text
+ruff (lint)........................................................Passed
+ruff (format)......................................................Passed
+eslint (frontend)..................................................Passed
+prettier (frontend)................................................Passed
+```
+
+If a check fails, the framework will block the commit. It will often fix the formatting automatically for you, but you still need to stage the new changes (`git add .`) and run the commit command again.
