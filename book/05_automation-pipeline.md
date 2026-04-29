@@ -12,7 +12,7 @@ In this subchapter, we will focus on enforcing code quality at the source. This 
 
 ### Protect the default branch
 
-Because you will be pushing code from your `main` or `master` branch, you should set up branch protection. This is an important practice to ensure broken code doesn't make its way into production by mistake.
+Since you will be pushing code from your `main` or `master` branch, you should set up branch protection. This is an important practice to ensure broken code doesn't make its way into production by mistake.
 
 If your repository is public, you can secure a branch on GitHub for free. To begin, open your repository and click on the settings tab.
 
