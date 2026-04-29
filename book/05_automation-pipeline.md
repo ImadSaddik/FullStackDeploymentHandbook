@@ -41,7 +41,7 @@ In the **Branch rules** section, enable the following settings:
 - **Require a pull request before merging**: Set the **Required approvals** to `0`.
 
 > [!NOTE]
-> Setting required approvals to `0` is a good strategy for solo developers. It forces you to open a Pull Request, which builds a great habit and documents your project history, but it lets you merge it yourself immediately without waiting for a second person to approve it. If you are working on a team, you would set this to 1 or 2.
+> Setting required approvals to `0` is a good strategy for solo developers. It forces you to open a pull request, which builds a great habit and documents your project history, but it lets you merge it yourself immediately without waiting for a second person to approve it. If you are working on a team, you would set this to 1 or 2.
 
 Click the **Create** button to save your ruleset.
 
