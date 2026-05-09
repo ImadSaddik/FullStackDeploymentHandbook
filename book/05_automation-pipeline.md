@@ -390,3 +390,56 @@ Because you already understand the anatomy of a workflow, reading this file is s
 - **Python setup:** It uses `actions/setup-python@v6` to install Python 3.13.
 - **Pip caching:** Instead of caching `pnpm`, it tells GitHub to cache `pip`. This stores your downloaded Python packages to speed up future runs.
 - **Ruff execution:** Instead of installing dependencies from a `requirements.txt` file, it installs the Ruff package directly and runs the linting and formatting checks using the `run` command.
+
+### Running unit tests
+
+When you add tests to a CI pipeline, you can treat them like a black box. GitHub Actions does not care if you use Vitest, Jest, or Pytest. It only cares about the final exit code.
+
+When the runner executes your test command, your testing framework reports back to the operating system. If every test passes, it returns a `0` (Success). If a single test fails, it returns a `1` (Error), which instantly stops the pipeline and prevents the broken code from merging.
+
+> [!NOTE]
+> This handbook will not teach you how to write unit tests for your specific application. Our focus is strictly on the infrastructure and the deployment pipeline. You only need to know how to plug your testing suite into the orchestrator.
+
+#### The frontend workflow
+
+Create a new file at `.github/workflows/frontend-unit-tests.yml` and paste the following configuration:
+
+```yaml
+name: Frontend unit tests
+
+on:
+  workflow_call:
+
+jobs:
+  tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run unit tests
+        run: pnpm run test:coverage
+```
+
+Because you already understand the workflow syntax from the previous step, this file is incredibly easy to read. It checks out the code, sets up the Node.js environment with `pnpm` caching, and installs your dependencies.
+
+The only new step is the final command: `run: pnpm run test:coverage`. This executes the testing script defined in your `package.json` file. If the tests pass, GitHub Actions moves on to the next job in your pipeline. If they fail, the pipeline stops immediately.
