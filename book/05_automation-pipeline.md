@@ -483,3 +483,126 @@ Like the frontend file, this workflow checks out the code, sets up Python with `
 The most important part is the final step: `run: pytest tests/unit --tb=short`. This executes your Python test suite. We use the `--tb=short` flag because default Python error tracebacks can be massive.
 
 When a test fails in the cloud, scrolling through hundreds of lines of logs in the GitHub Actions interface is frustrating. This flag shortens the output, highlighting exactly which line of code failed so you can fix it and get the pipeline moving again.
+
+### The orchestrator
+
+You now have four isolated, reusable workflows. It is time to tie them all together using a master file.
+
+Create a file named `ci.yml` directly inside `.github/workflows/` (this is the file GitHub will monitor).
+
+```yaml
+name: CI pipeline
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  frontend-lint-format-check:
+    name: Frontend lint
+    uses: ./.github/workflows/frontend-lint-format-check.yml
+
+  backend-lint-format-check:
+    name: Backend lint
+    uses: ./.github/workflows/backend-lint-format-check.yml
+
+  frontend-unit-tests:
+    name: Frontend tests
+    needs: frontend-lint-format-check
+    uses: ./.github/workflows/frontend-unit-tests.yml
+
+  backend-unit-tests:
+    name: Backend tests
+    needs: backend-lint-format-check
+    uses: ./.github/workflows/backend-unit-tests.yml
+
+  pipeline-success:
+    name: Pipeline success
+    needs:
+      [
+        frontend-lint-format-check,
+        backend-lint-format-check,
+        frontend-unit-tests,
+        backend-unit-tests,
+      ]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Pipeline succeeded
+        if: "!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')"
+        run: echo "All checks passed successfully!"
+      - name: Pipeline failed
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "Some checks failed or were cancelled."
+          exit 1
+```
+
+Let's break down how this master file orchestrates your pipeline.
+
+```yaml
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+```
+
+This tells GitHub to run the pipeline automatically when you open a pull request against the `master` branch, or when code is successfully merged into it.
+
+The `workflow_dispatch` line is a handy addition; it adds a manual "Run" button to the GitHub Actions interface so you can trigger the pipeline yourself if needed.
+
+```yaml
+frontend-lint-format-check:
+  name: Frontend lint
+  uses: ./.github/workflows/frontend-lint-format-check.yml
+```
+
+Instead of writing all the installation and testing steps here, you use the `uses` keyword to point to the local YAML files you created earlier. This keeps your orchestrator clean and easy to read.
+
+```yaml
+frontend-unit-tests:
+  name: Frontend tests
+  needs: frontend-lint-format-check
+  uses: ./.github/workflows/frontend-unit-tests.yml
+```
+
+By default, GitHub Actions runs all jobs at the exact same time in parallel. The `needs` keyword forces an order of operations.
+
+For example, `frontend-unit-tests` requires `frontend-lint-format-check` to pass first. If the linting step fails, the pipeline immediately cancels the testing step. This saves computing time and gives you faster feedback.
+
+```yaml
+pipeline-success:
+  name: Pipeline success
+  needs: [frontend-lint-format-check, backend-lint-format-check, frontend-unit-tests, backend-unit-tests]
+  runs-on: ubuntu-latest
+  if: always()
+```
+
+This is the most important part of the file. It acts as an aggregator for all the previous jobs. The `if: always()` command forces this final job to run even if the previous jobs crashed.
+
+But how does it actually know if those previous jobs crashed? We check the `needs.*.result` variable, which contains the final status of every job listed in the `needs` array.
+
+```yaml
+steps:
+  - name: Pipeline succeeded
+    if: "!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')"
+    run: echo "All checks passed successfully!"
+  - name: Pipeline failed
+    if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+    run: |
+      echo "Some checks failed or were cancelled."
+      exit 1
+```
+
+Let's understand those GitHub Actions expressions:
+
+- `needs.*.result`: The asterisk (`*`) is a wildcard. It grabs the final status (like `success`, `failure`, or `cancelled`) of every single job you listed in the `needs` array.
+- `contains(...)`: This scans that list of results. If it finds a `failure` or a `cancelled` job anywhere in the list, the "Pipeline failed" step is triggered.
+- `exit 1`: Tells the Linux machine to fail this step, which turns the final check mark red on your GitHub pull request. If it does not find any failures, it echoes the success message.
+
+Make sure to commit all these YAML files and push them to your repository before moving to the final step.
