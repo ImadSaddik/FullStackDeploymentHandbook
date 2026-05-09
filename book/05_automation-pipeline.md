@@ -658,3 +658,9 @@ If you go back to a failed pull request now, you will see that the merge button 
 _The pipeline is now actively blocking the merge button when it fails._
 
 By using the `pipeline-success` job as your only required check, you have saved yourself future headaches. As you add new jobs to your CI pipeline in the next chapters (like security scanning or end-to-end tests), you only need to update your `ci.yml` file. You will never have to come back to these GitHub settings to update this list again.
+
+### What is next?
+
+Your pipeline is now actively defending your codebase against formatting errors and broken logic.
+
+In the next subchapter, **Chapter 5.3: Automated security scanning**, you will add security guardrails to your pipeline. You will configure automated tools to audit your third-party dependencies for known vulnerabilities and scan your source code for unsafe practices using [Static Application Security Testing](https://en.wikipedia.org/wiki/Static_application_security_testing) (SAST).
