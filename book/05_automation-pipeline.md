@@ -219,15 +219,15 @@ However, local checks have a limitation. They only run on your specific machine.
 
 [Continuous Integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) solves this problem. A CI pipeline automatically spins up a fresh, isolated computer in the cloud every time you push code. It downloads your repository, installs the exact dependencies required, and runs your quality checks from scratch. If any check fails, the pipeline blocks the pull request and prevents the bad code from merging into your master branch.
 
-In this subchapter and the upcoming ones, you will use [GitHub Actions](https://github.com/features/actions).
+In this subchapter and the upcoming ones, you will learn how to implement these CI workflows using [GitHub Actions](https://github.com/features/actions).
 
-### The modular architecture
+### Building a modular architecture
 
 Before writing the pipeline, we need to design a solid structure.
 
 Many developers make the mistake of putting their entire CI/CD process into one massive file. When a step fails in a giant file, finding the exact error in the logs is frustrating.
 
-Instead, you will use [reusable workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows). GitHub Actions allows you to write small, focused configuration files that handle one specific job (like linting the frontend). You can then use the `workflow_call` trigger to let a main orchestrator file call these smaller files when needed.
+Instead, you will use [reusable workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows). GitHub Actions allows you to write small, focused configuration files that handle one specific job (like linting the frontend). You can then use the `workflow_call` trigger to allow a main orchestrator file to call these smaller files when needed.
 
 This keeps your code organized, makes your logs highly readable, and allows you to easily plug new jobs into your pipeline later.
 
@@ -385,7 +385,7 @@ jobs:
         run: ruff format . --check
 ```
 
-Because you already understand the anatomy of a workflow, reading this file is straightforward. It uses the exact same structure as the frontend, but swaps out the tools:
+Because you already understand the anatomy of a workflow, reading this file is straightforward. It uses the same structure as the frontend, but swaps out the tools:
 
 - **Python setup:** It uses `actions/setup-python@v6` to install Python 3.13.
 - **Pip caching:** Instead of caching `pnpm`, it tells GitHub to cache `pip`. This stores your downloaded Python packages to speed up future runs.
@@ -440,7 +440,7 @@ jobs:
         run: pnpm run test:coverage
 ```
 
-Because you already understand the workflow syntax from the previous step, this file is incredibly easy to read. It checks out the code, sets up the Node.js environment with `pnpm` caching, and installs your dependencies.
+This workflow checks out the code, sets up the Node.js environment with `pnpm` caching, and installs your dependencies.
 
 The only new step is the final command: `run: pnpm run test:coverage`. This executes the testing script defined in your `package.json` file. If the tests pass, GitHub Actions moves on to the next job in your pipeline. If they fail, the pipeline stops immediately.
 
@@ -645,12 +645,12 @@ _Navigate to your branch protection ruleset in the GitHub settings._
 
 Scroll down to the **Branch rules** section and check the box that says **Require status checks to pass**.
 
-A search bar will appear. Click the **Add checks** button and search for **Pipeline success**. Add it to the required list.
+Click the **Add checks** button and search for **Pipeline success**. Add it to the required list.
 
 ![Screenshot showing the "Require status checks to pass" checkbox enabled, with the "Pipeline success" job added to the required list below it](./images/5_2_4_require_status_checks.png)
 _Enable status checks and add the final pipeline success job as the mandatory requirement._
 
-Click **Save changes**.
+Click **Save changes** at the bottom of the page.
 
 If you go back to a failed pull request now, you will see that the merge button is grayed out and completely blocked. You cannot merge the code until the pipeline turns green.
 
