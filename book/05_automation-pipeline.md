@@ -443,3 +443,43 @@ jobs:
 Because you already understand the workflow syntax from the previous step, this file is incredibly easy to read. It checks out the code, sets up the Node.js environment with `pnpm` caching, and installs your dependencies.
 
 The only new step is the final command: `run: pnpm run test:coverage`. This executes the testing script defined in your `package.json` file. If the tests pass, GitHub Actions moves on to the next job in your pipeline. If they fail, the pipeline stops immediately.
+
+#### The backend workflow
+
+Create the backend equivalent at `.github/workflows/backend-unit-tests.yml`:
+
+```yaml
+name: Backend unit tests
+
+on:
+  workflow_call:
+
+jobs:
+  tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: pytest tests/unit --tb=short
+```
+
+Like the frontend file, this workflow checks out the code, sets up Python with `pip` caching, and installs your dependencies from `requirements.txt`.
+
+The most important part is the final step: `run: pytest tests/unit --tb=short`. This executes your Python test suite. We use the `--tb=short` flag because default Python error tracebacks can be massive.
+
+When a test fails in the cloud, scrolling through hundreds of lines of logs in the GitHub Actions interface is frustrating. This flag shortens the output, highlighting exactly which line of code failed so you can fix it and get the pipeline moving again.
