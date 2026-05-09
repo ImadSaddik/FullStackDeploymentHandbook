@@ -208,3 +208,15 @@ Your local environment is now fully secure. By protecting your main branch and e
 However, local checks only run on your specific laptop. To ensure absolute code quality, you need an isolated environment to verify the code automatically.
 
 In the next subchapter, **Chapter 5.2: Continuous Integration**, you will take this automation to the cloud. You will configure [GitHub Actions](https://github.com/features/actions) to run these exact linting checks, alongside your unit tests, ensuring that no pull request can be merged unless the code passes all checks.
+
+## Continuous integration & unit tests
+
+### Introduction
+
+In the previous subchapter, you locked down your local workflow. You set up branch protection and pre-commit hooks to catch formatting issues and simple bugs before they even leave your computer.
+
+However, local checks have a limitation. They only run on your specific machine. If a teammate bypasses the hooks, or if your laptop has a different software version than your production server, broken code can still make its way into your repository.
+
+[Continuous Integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) solves this problem. A CI pipeline automatically spins up a fresh, isolated computer in the cloud every time you push code. It downloads your repository, installs the exact dependencies required, and runs your quality checks from scratch. If any check fails, the pipeline blocks the pull request and prevents the bad code from merging into your master branch.
+
+In this subchapter and the upcoming ones, you will use [GitHub Actions](https://github.com/features/actions).
