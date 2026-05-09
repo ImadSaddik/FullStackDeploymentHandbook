@@ -230,3 +230,120 @@ Many developers make the mistake of putting their entire CI/CD process into one 
 Instead, you will use [reusable workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows). GitHub Actions allows you to write small, focused configuration files that handle one specific job (like linting the frontend). You can then use the `workflow_call` trigger to let a main orchestrator file call these smaller files when needed.
 
 This keeps your code organized, makes your logs highly readable, and allows you to easily plug new jobs into your pipeline later.
+
+### Linting and formatting in the cloud
+
+First, you will mirror the same checks you configured in your local pre-commit hooks. This guarantees that the cloud environment holds your code to the same strict standards as your local machine.
+
+#### The frontend workflow
+
+Create a new file at `.github/workflows/frontend-lint-format-check.yml` and paste the following configuration:
+
+```yaml
+name: Frontend lint & format
+
+on:
+  workflow_call:
+
+jobs:
+  lint-format:
+    name: Lint & format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run ESLint
+        run: pnpm run lint
+
+      - name: Check Prettier formatting
+        run: pnpm run format:check
+```
+
+If you have never written a GitHub Actions workflow before, the syntax might look a bit unfamiliar. Let's break down the anatomy of this file so you understand exactly what it is doing.
+
+```yaml
+name: Frontend lint & format
+```
+
+This is the name of the workflow. It will appear in your GitHub repository's Actions tab, and it will be displayed in the logs when this workflow runs.
+
+```yaml
+on:
+  workflow_call:
+```
+
+This tells GitHub that this file is a reusable template, not a standalone script. It will sit quietly until your main CI pipeline explicitly calls it to run.
+
+```yaml
+jobs:
+  lint-format:
+  name: Lint & format
+```
+
+This defines a job named `lint-format`. A workflow can have multiple jobs, and each job can run on a different machine with different configurations. By giving it a descriptive name, you can easily identify it in the logs.
+
+```yaml
+runs-on: ubuntu-latest
+defaults:
+  run:
+    working-directory: ./frontend
+```
+
+GitHub spins up a fresh, isolated Linux machine (`ubuntu-latest`) just for this job. The `defaults` block tells the server to automatically run all subsequent commands inside the `./frontend` directory. This saves you from having to type `cd frontend` before every single step.
+
+```yaml
+steps:
+  - name: Check out repository
+  - name: Set up pnpm
+  - name: Set up Node.js
+  - name: Install dependencies
+  - name: Run ESLint
+  - name: Check Prettier formatting
+```
+
+A job is a series of steps. Each step is a single task that contributes to the overall job. The steps are executed in order, and if any step fails, the entire job fails.
+
+```yaml
+- name: Check out repository
+  uses: actions/checkout@v6
+
+- name: Install dependencies
+  run: pnpm install
+```
+
+Notice that we use two keywords in the `steps` list: `uses` and `run`.
+
+- `uses`: This tells the server to execute a pre-built community script. Instead of writing custom code to download your repository, you use the official `actions/checkout@v6` action. We also use community actions to safely install `Node.js` and `pnpm`.
+- `run`: This acts exactly like typing a command into your own terminal.
+
+```yaml
+- name: Set up Node.js
+  uses: actions/setup-node@v6
+  with:
+    node-version: "22"
+    cache: "pnpm"
+    cache-dependency-path: frontend/pnpm-lock.yaml
+```
+
+Notice the caching configuration inside the Node.js setup block. By telling GitHub to cache `pnpm`, the runner saves a hidden copy of your downloaded packages.
+
+On future runs, it will reuse those packages instead of downloading them from scratch over the internet. This significantly cuts your pipeline execution time.
