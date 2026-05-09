@@ -347,3 +347,46 @@ Notice that we use two keywords in the `steps` list: `uses` and `run`.
 Notice the caching configuration inside the Node.js setup block. By telling GitHub to cache `pnpm`, the runner saves a hidden copy of your downloaded packages.
 
 On future runs, it will reuse those packages instead of downloading them from scratch over the internet. This significantly cuts your pipeline execution time.
+
+#### The backend workflow
+
+Next, create the backend equivalent at `.github/workflows/backend-lint-format-check.yml`:
+
+```yaml
+name: Backend lint & format
+
+on:
+  workflow_call:
+
+jobs:
+  lint-format:
+    name: Lint & format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install Ruff
+        run: pip install ruff==0.14.6
+
+      - name: Run Ruff linter
+        run: ruff check .
+
+      - name: Run Ruff formatter check
+        run: ruff format . --check
+```
+
+Because you already understand the anatomy of a workflow, reading this file is straightforward. It uses the exact same structure as the frontend, but swaps out the tools:
+
+- **Python setup:** It uses `actions/setup-python@v6` to install Python 3.13.
+- **Pip caching:** Instead of caching `pnpm`, it tells GitHub to cache `pip`. This stores your downloaded Python packages to speed up future runs.
+- **Ruff execution:** Instead of installing dependencies from a `requirements.txt` file, it installs the Ruff package directly and runs the linting and formatting checks using the `run` command.
