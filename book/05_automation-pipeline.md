@@ -220,3 +220,13 @@ However, local checks have a limitation. They only run on your specific machine.
 [Continuous Integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) solves this problem. A CI pipeline automatically spins up a fresh, isolated computer in the cloud every time you push code. It downloads your repository, installs the exact dependencies required, and runs your quality checks from scratch. If any check fails, the pipeline blocks the pull request and prevents the bad code from merging into your master branch.
 
 In this subchapter and the upcoming ones, you will use [GitHub Actions](https://github.com/features/actions).
+
+### The modular architecture
+
+Before writing the pipeline, we need to design a solid structure.
+
+Many developers make the mistake of putting their entire CI/CD process into one massive file. When a step fails in a giant file, finding the exact error in the logs is frustrating.
+
+Instead, you will use [reusable workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows). GitHub Actions allows you to write small, focused configuration files that handle one specific job (like linting the frontend). You can then use the `workflow_call` trigger to let a main orchestrator file call these smaller files when needed.
+
+This keeps your code organized, makes your logs highly readable, and allows you to easily plug new jobs into your pipeline later.
