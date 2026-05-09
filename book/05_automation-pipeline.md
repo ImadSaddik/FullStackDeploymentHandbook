@@ -633,3 +633,28 @@ However, look closely at the bottom of the pull request. Even though the pipelin
 _When the code is fixed, all checks pass successfully._
 
 Now that the code is clean, the pipeline passes. Let's fix that dangerous merge button so that the failed pipeline scenario can never happen again.
+
+### Enforcing status checks on GitHub
+
+Right now, your pipeline reports a green checkmark or a red cross, but you have to tell GitHub to actively block the pull request if that final check fails.
+
+Go to your repository on GitHub and click on the **Settings** tab. In the left sidebar, click on **Rulesets**, then select the branch protection ruleset you created in Chapter 5.1.
+
+![Screenshot showing the GitHub settings page, highlighting 'Rulesets' in the sidebar and the specific branch rule to click](./images/5_2_3_github_rulesets_navigation.png)
+_Navigate to your branch protection ruleset in the GitHub settings._
+
+Scroll down to the **Branch rules** section and check the box that says **Require status checks to pass**.
+
+A search bar will appear. Click the **Add checks** button and search for **Pipeline success**. Add it to the required list.
+
+![Screenshot showing the "Require status checks to pass" checkbox enabled, with the "Pipeline success" job added to the required list below it](./images/5_2_4_require_status_checks.png)
+_Enable status checks and add the final pipeline success job as the mandatory requirement._
+
+Click **Save changes**.
+
+If you go back to a failed pull request now, you will see that the merge button is grayed out and completely blocked. You cannot merge the code until the pipeline turns green.
+
+![Screenshot of the failed pull request again, but now the Merge button is grayed out and unclickable](./images/5_2_5_failed_pipeline_blocked_button.png)
+_The pipeline is now actively blocking the merge button when it fails._
+
+By using the `pipeline-success` job as your only required check, you have saved yourself future headaches. As you add new jobs to your CI pipeline in the next chapters (like security scanning or end-to-end tests), you only need to update your `ci.yml` file. You will never have to come back to these GitHub settings to update this list again.
