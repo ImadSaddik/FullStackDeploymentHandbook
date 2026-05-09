@@ -606,3 +606,30 @@ Let's understand those GitHub Actions expressions:
 - `exit 1`: Tells the Linux machine to fail this step, which turns the final check mark red on your GitHub pull request. If it does not find any failures, it echoes the success message.
 
 Make sure to commit all these YAML files and push them to your repository before moving to the final step.
+
+### Seeing the pipeline in action
+
+You have written a lot of YAML. Let's prove that this orchestration actually works.
+
+Create a new branch, make a deliberate mistake in your code, and open a pull request against your `master` branch.
+
+#### The failed pipeline
+
+Because you pushed broken code, your linting or testing job will crash. Watch how the pipeline reacts:
+
+![Screenshot of a GitHub Pull Request showing a failed CI run. The Frontend lint job fails, the Frontend tests job is skipped, and the Pipeline success job fails. The Merge button is active.](./images/5_2_1_failed_pipeline_active_button.png)
+_The pipeline caught the error, but the merge button is still active._
+
+This screenshot proves our logic works perfectly. Notice two things:
+
+- The **Frontend tests** job was skipped entirely. Because it "needs" the linting job to pass first, GitHub saved computing time by stopping the branch early.
+- The **Pipeline success** job saw that a previous step failed, so it intentionally triggered an error to clearly mark the whole run as a failure.
+
+However, look closely at the bottom of the pull request. Even though the pipeline failed, the **Merge pull request** button is still active and clickable! This defeats the entire purpose of Continuous Integration. Right now, the pipeline is just giving you a suggestion; it is not actually protecting your code.
+
+#### The successful pipeline
+
+![Screenshot of the same Pull Request, but now all 5 jobs, including Pipeline success, have green checkmarks.](./images/5_2_2_successful_pipeline.png)
+_When the code is fixed, all checks pass successfully._
+
+Now that the code is clean, the pipeline passes. Let's fix that dangerous merge button so that the failed pipeline scenario can never happen again.
