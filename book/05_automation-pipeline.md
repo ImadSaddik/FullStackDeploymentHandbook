@@ -296,7 +296,7 @@ This tells GitHub that this file is a reusable template, not a standalone script
 ```yaml
 jobs:
   lint-format:
-  name: Lint & format
+    name: Lint & format
 ```
 
 This defines a job named `lint-format`. A workflow can have multiple jobs, and each job can run on a different machine with different configurations. By giving it a descriptive name, you can easily identify it in the logs.
