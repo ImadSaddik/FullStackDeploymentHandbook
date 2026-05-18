@@ -677,3 +677,89 @@ By shifting left, you catch vulnerabilities within minutes of writing the code, 
 
 - **Software Composition Analysis (SCA):** Auditing the third-party libraries you install for known vulnerabilities.
 - **Static Application Security Testing (SAST):** Scanning the code you write yourself for dangerous patterns and security flaws.
+
+### Auditing third-party dependencies (SCA)
+
+Modern applications are rarely built entirely from scratch. When you run `pnpm install` or `pip install`, you are downloading hundreds of thousands of lines of code written by other people.
+
+Hackers know this. Instead of trying to break into your specific website, they look for vulnerabilities in popular open-source packages. If they find one, they can compromise thousands of websites at once. Software Composition Analysis (SCA) protects you from this by checking your `package.json` and `requirements.txt` against databases of known vulnerabilities (CVEs).
+
+#### The frontend audit
+
+For the Vue.js frontend, `pnpm` has a built-in audit command. Create a new file at `.github/workflows/frontend-vulnerability-check.yml`:
+
+```yaml
+name: Frontend vulnerability check
+
+on:
+  workflow_call:
+
+jobs:
+  vulnerability-check:
+    name: Audit dependencies
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        run: pnpm audit
+```
+
+This workflow looks very similar to your linting workflow, but notice the `pnpm install --frozen-lockfile` command. This guarantees that the CI server installs the exact versions of the packages defined in your lockfile without accidentally upgrading anything. Finally, it runs `pnpm audit`. If any of your dependencies have a known security flaw, this command will fail and block the pipeline.
+
+#### The backend audit
+
+For the FastAPI backend, you will use a dedicated GitHub Action called `gh-action-pip-audit`. Create `.github/workflows/backend-vulnerability-check.yml`:
+
+```yaml
+name: Backend vulnerability check
+
+on:
+  workflow_call:
+
+jobs:
+  vulnerability-check:
+    name: Audit dependencies
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Run pip-audit
+        uses: pypa/gh-action-pip-audit@v1.1.0
+        with:
+          inputs: backend/requirements.txt
+```
+
+Instead of manually installing dependencies and running a script, we use the official `pypa/gh-action-pip-audit` action. We point it to your `requirements.txt` file, and it cross-references every library you use against the Python vulnerability database.
+
+> [!NOTE]
+> If you are using a `pyproject.toml` file instead of `requirements.txt`, set the `inputs` parameter to the **path of your project directory** (e.g., `.` or `backend/`). This allows `pip-audit` to automatically detect and audit dependencies listed in `pyproject.toml`.
