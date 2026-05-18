@@ -763,3 +763,50 @@ Instead of manually installing dependencies and running a script, we use the off
 
 > [!NOTE]
 > If you are using a `pyproject.toml` file instead of `requirements.txt`, set the `inputs` parameter to the **path of your project directory** (e.g., `.` or `backend/`). This allows `pip-audit` to automatically detect and audit dependencies listed in `pyproject.toml`.
+
+### Scanning your source code (SAST)
+
+While auditing dependencies protects you from flaws in other people's code, Static Application Security Testing (SAST) protects you from mistakes in your own code. A SAST tool acts like an automated security auditor, reading through your source code line by line to find dangerous patterns before the application ever runs.
+
+For the Python backend, you will use a popular tool called [bandit](https://github.com/pycqa/bandit). It specifically hunts for common Python security risks, such as hardcoded passwords, weak cryptography, or dangerous uses of the `exec()` function.
+
+Create a new file at `.github/workflows/backend-sast-check.yml`:
+
+```yaml
+name: Backend SAST check
+
+on:
+  workflow_call:
+
+jobs:
+  bandit-check:
+    name: Bandit SAST scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit
+        run: bandit -r . -ll
+```
+
+This workflow follows the familiar pattern of checking out the code and setting up Python.
+
+The magic happens in the final step: `run: bandit -r . -ll`. Here is what those flags do:
+
+- `-r .` : This tells Bandit to run **recursively**, scanning every single Python file inside the current directory (`./backend`).
+- `-ll` : Bandit categorizes vulnerabilities by severity (Low, Medium, and High). Using two "L"s tells the tool to only report **Medium and High** severity issues. This is a great configuration to start with, as it prevents your pipeline from failing due to minor, low-risk warnings (false positives).
+
+If Bandit finds a serious vulnerability, it will print a detailed report in the GitHub Actions log and immediately fail the job, preventing the insecure code from reaching production.
