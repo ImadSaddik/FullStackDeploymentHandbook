@@ -664,3 +664,16 @@ By using the `pipeline-success` job as your only required check, you have saved 
 Your pipeline is now actively defending your codebase against formatting errors and broken logic.
 
 In the next subchapter, **Chapter 5.3: Automated security scanning**, you will add security guardrails to your pipeline. You will configure automated tools to audit your third-party dependencies for known vulnerabilities and scan your source code for unsafe practices using [Static Application Security Testing](https://en.wikipedia.org/wiki/Static_application_security_testing) (SAST).
+
+## Automated security scanning
+
+### Introduction
+
+In the previous subchapter, you built a pipeline that guarantees your code is formatted correctly and your logic works as expected. But what happens if your code is perfectly formatted, but fundamentally insecure?
+
+In traditional software development, security testing often happened at the very end of the cycle, right before release. If a critical vulnerability was found, developers had to scramble to rewrite major parts of the application. Today, the industry standard is to **"Shift Left"**. This means moving security checks to the earliest possible point in the development process: the Continuous Integration pipeline.
+
+By shifting left, you catch vulnerabilities within minutes of writing the code, long before it ever reaches a production server. In this subchapter, you will implement two important security guardrails:
+
+- **Software Composition Analysis (SCA):** Auditing the third-party libraries you install for known vulnerabilities.
+- **Static Application Security Testing (SAST):** Scanning the code you write yourself for dangerous patterns and security flaws.
