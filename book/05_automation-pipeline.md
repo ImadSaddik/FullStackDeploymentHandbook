@@ -810,3 +810,40 @@ The magic happens in the final step: `run: bandit -r . -ll`. Here is what those 
 - `-ll` : Bandit categorizes vulnerabilities by severity (Low, Medium, and High). Using two "L"s tells the tool to only report **Medium and High** severity issues. This is a great configuration to start with, as it prevents your pipeline from failing due to minor, low-risk warnings (false positives).
 
 If Bandit finds a serious vulnerability, it will print a detailed report in the GitHub Actions log and immediately fail the job, preventing the insecure code from reaching production.
+
+### Updating the orchestrator
+
+You now have three powerful security workflows ready to go. The final step is to plug them into your main CI pipeline.
+
+Open your `.github/workflows/ci.yml` file. You are going to add the three new security jobs at the very top of your `jobs` list. Then, you are going to update the `needs` array of your existing linting jobs.
+
+Update your file to look like this:
+
+```yaml
+# ...
+
+jobs:
+  frontend-vulnerability-check:
+    name: Frontend vulnerability
+    uses: ./.github/workflows/frontend-vulnerability-check.yml
+
+  backend-vulnerability-check:
+    name: Backend vulnerability
+    uses: ./.github/workflows/backend-vulnerability-check.yml
+
+  backend-sast-check:
+    name: Backend SAST
+    uses: ./.github/workflows/backend-sast-check.yml
+
+  frontend-lint-format-check:
+    name: Frontend lint
+    needs: frontend-vulnerability-check
+    uses: ./.github/workflows/frontend-lint-format-check.yml
+
+  backend-lint-format-check:
+    name: Backend lint
+    needs: [backend-vulnerability-check, backend-sast-check]
+    uses: ./.github/workflows/backend-lint-format-check.yml
+
+# ...
+```
