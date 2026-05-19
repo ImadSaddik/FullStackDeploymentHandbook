@@ -854,7 +854,12 @@ Look closely at the `needs` keywords we just updated. You explicitly told GitHub
 
 This is known in DevOps as a **"Fail Fast"** strategy.
 
-If Bandit discovers that you accidentally hardcoded a database password, or `pip-audit` finds a critical vulnerability in a library you just installed, your code is fundamentally insecure. There is absolutely no reason to waste server computing time checking if your Python files have the correct indentation. By forcing the pipeline to check security first, you catch critical errors immediately and save compute time.
+If Bandit discovers that you accidentally hardcoded a database password, or `pip-audit` finds a critical vulnerability in a library you just installed, your code is fundamentally insecure.
+
+There is absolutely no reason to waste server computing time checking if your Python files have the correct indentation. By forcing the pipeline to check security first, you catch critical errors immediately and save compute time.
+
+![Screenshot of the GitHub Actions visual workflow graph showing the three security jobs running first, with lines connecting them to the dependent linting jobs](./images/5_3_3_fail_fast_graph.png)
+_The visual graph proves the Fail Fast strategy: linting and testing will not start until the security guardrails pass._
 
 #### Update the gatekeeper
 
