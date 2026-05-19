@@ -855,3 +855,28 @@ Look closely at the `needs` keywords we just updated. You explicitly told GitHub
 This is known in DevOps as a **"Fail Fast"** strategy.
 
 If Bandit discovers that you accidentally hardcoded a database password, or `pip-audit` finds a critical vulnerability in a library you just installed, your code is fundamentally insecure. There is absolutely no reason to waste server computing time checking if your Python files have the correct indentation. By forcing the pipeline to check security first, you catch critical errors immediately and save compute time.
+
+#### Update the gatekeeper
+
+Finally, scroll down to the very bottom of your `ci.yml` file and update your `pipeline-success` job. You must add the three new security jobs to the `needs` array so your gatekeeper knows to monitor them:
+
+```yaml
+  pipeline-success:
+    name: Pipeline success
+    needs:
+      [
+        frontend-vulnerability-check,
+        backend-vulnerability-check,
+        backend-sast-check,
+        frontend-lint-format-check,
+        backend-lint-format-check,
+        frontend-unit-tests,
+        backend-unit-tests,
+      ]
+    runs-on: ubuntu-latest
+    if: always()
+
+# ...
+```
+
+Commit and push these changes. If you open a pull request now, you will see your new security checks spin up first to protect your codebase from vulnerabilities before any other checks run.
