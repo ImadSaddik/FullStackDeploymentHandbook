@@ -847,3 +847,11 @@ jobs:
 
 # ...
 ```
+
+#### The "Fail Fast" strategy
+
+Look closely at the `needs` keywords we just updated. You explicitly told GitHub Actions that `backend-lint-format-check` cannot run until `backend-vulnerability-check` and `backend-sast-check` finish successfully.
+
+This is known in DevOps as a **"Fail Fast"** strategy.
+
+If Bandit discovers that you accidentally hardcoded a database password, or `pip-audit` finds a critical vulnerability in a library you just installed, your code is fundamentally insecure. There is absolutely no reason to waste server computing time checking if your Python files have the correct indentation. By forcing the pipeline to check security first, you catch critical errors immediately and save compute time.
