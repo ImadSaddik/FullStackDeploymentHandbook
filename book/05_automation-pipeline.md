@@ -880,3 +880,9 @@ Finally, scroll down to the very bottom of your `ci.yml` file and update your `p
 ```
 
 Commit and push these changes. If you open a pull request now, you will see your new security checks spin up first to protect your codebase from vulnerabilities before any other checks run.
+
+### What is next?
+
+Your pipeline is now extremely robust. It automatically audits your dependencies, scans your source code for bad practices, enforces strict formatting, and verifies your logic with unit tests. However, all of these checks are "static"; they look at the code while it is sitting still.
+
+In **Chapter 5.4: Advanced testing & DAST**, you will take the pipeline to the next level. You will learn how to start your application inside the CI runner (including the FastAPI backend, the Vue frontend, and a temporary Meilisearch database). Once the app is running, you will execute Playwright End-to-End tests and use OWASP ZAP to dynamically attack your API, proving that your application is secure when it is fully alive.
