@@ -811,6 +811,11 @@ The magic happens in the final step: `run: bandit -r . -ll`. Here is what those 
 
 If Bandit finds a serious vulnerability, it will print a detailed report in the GitHub Actions log and immediately fail the job, preventing the insecure code from reaching production.
 
+To see this in action, try temporarily adding a deliberate security flaw to your backend. Push a commit that uses a dangerous, outdated cryptography module (like adding `import hashlib; hashlib.md5()` to `main.py`). Push this change to a new test branch and **open a pull request** against your master branch:
+
+![Screenshot of a GitHub Actions log showing Bandit catching the use of the insecure MD5 hash algorithm and failing the workflow](./images/5_3_2_bandit_scan_failure.png)
+_Bandit automatically detects the weak cryptography pattern and blocks the pipeline. (Remember to delete the test branch after you grab this screenshot!)_
+
 ### Updating the orchestrator
 
 You now have three powerful security workflows ready to go. The final step is to plug them into your main CI pipeline.
