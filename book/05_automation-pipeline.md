@@ -822,6 +822,8 @@ To see this in action, try temporarily adding a deliberate security flaw to your
 ![Screenshot of a GitHub Actions log showing Bandit catching the use of the insecure MD5 hash algorithm and failing the workflow](./images/5_3_2_bandit_scan_failure.png)
 _Bandit automatically detects the weak cryptography pattern and blocks the pipeline._
 
+As you can see, the SAST scan failed because it detected the weak MD5 algorithm. Since this job failed, GitHub Actions immediately halted the workflow. But how did the runner know to skip the formatting and testing jobs? Let's tie it all together by looking at the dependency graph in your master orchestrator.
+
 ### Updating the orchestrator
 
 You now have three powerful security workflows ready to go. The final step is to plug them into your main CI pipeline.
