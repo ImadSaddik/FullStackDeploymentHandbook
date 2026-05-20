@@ -874,6 +874,8 @@ There is absolutely no reason to waste server computing time checking if your Py
 ![Screenshot of the GitHub Actions visual workflow graph showing the three security jobs running first, with lines connecting them to the dependent linting jobs](./images/5_3_3_fail_fast_graph.png)
 _The visual graph proves the Fail Fast strategy: linting and testing will not start until the security guardrails pass._
 
+From the image above, you can see that the security jobs run first. If any of them fail, the pipeline halts immediately, and the dependent linting and testing jobs are skipped.
+
 #### Update the gatekeeper
 
 Finally, scroll down to the very bottom of your `ci.yml` file and update your `pipeline-success` job. You must add the three new security jobs to the `needs` array so your gatekeeper knows to monitor them:
