@@ -675,11 +675,11 @@ In traditional software development, security testing often happened at the very
 
 By shifting left, you catch vulnerabilities within minutes of writing the code, long before it ever reaches a production server. In this subchapter, you will implement two important security guardrails:
 
-![Diagram comparing traditional security testing at the end of the lifecycle versus 'Shifting Left' into the CI/CD phase](./images/5_3_1_shift_left_diagram.png)
-_Shifting security left means finding vulnerabilities during the coding and testing phases, rather than waiting until release._
-
 - **Software Composition Analysis (SCA):** Auditing the third-party libraries you install for known vulnerabilities.
 - **Static Application Security Testing (SAST):** Scanning the code you write yourself for dangerous patterns and security flaws.
+
+![Diagram comparing traditional security testing at the end of the lifecycle versus 'Shifting Left' into the CI/CD phase](./images/5_3_1_shift_left_diagram.png)
+_Shifting security left means finding vulnerabilities during the coding and testing phases, rather than waiting until release._
 
 ### Auditing third-party dependencies (SCA)
 
