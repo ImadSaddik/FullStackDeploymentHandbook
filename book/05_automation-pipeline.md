@@ -257,9 +257,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: "10"
+          version: "11"
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -422,9 +422,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: "10"
+          version: "11"
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -709,9 +709,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: "10"
+          version: "11"
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -728,6 +728,9 @@ jobs:
 ```
 
 This workflow looks very similar to your linting workflow, but notice the `pnpm install --frozen-lockfile` command. This guarantees that the CI server installs the exact versions of the packages defined in your lockfile without accidentally upgrading anything. Finally, it runs `pnpm audit`. If any of your dependencies have a known security flaw, this command will fail and block the pipeline.
+
+> [!NOTE]
+> We specifically use pnpm version 11 in this workflow. This version turns on strong supply-chain protection by default. It automatically blocks exotic dependencies and forces a waiting period for newly published packages before they can be resolved, giving you extra security right out of the box.
 
 #### The backend audit
 
