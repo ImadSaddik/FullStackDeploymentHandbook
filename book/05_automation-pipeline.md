@@ -916,3 +916,136 @@ In this section, you will bring your application to life inside the GitHub Actio
 To do this, we will follow a clear order. First, you will set up backend integration tests to prove that your API can talk to a live Meilisearch database. Next, you will run end to end tests with Playwright to simulate a real user clicking through your website. Finally, you will use a dynamic security tool to actively scan your running application for vulnerabilities.
 
 To do this, we will follow a clear order. First, you will set up backend integration tests to show that your API can talk to a live Meilisearch database. Next, you will run end-to-end tests with Playwright to simulate a real user clicking through your website. Finally, you will use a dynamic security tool to scan your running application for vulnerabilities.
+
+### Backend integration tests
+
+Unit tests check individual parts of your code, but integration tests show that your backend can successfully work with other services. For this project, the FastAPI backend relies heavily on Meilisearch to handle search queries. If the backend cannot talk to Meilisearch, the application will not work.
+
+To test this in GitHub Actions, you cannot use a fake database. You need to download the real Meilisearch program, start it up inside the Ubuntu runner, and run your tests against it.
+
+Create a new file at `.github/workflows/backend-integration-tests.yml`:
+
+```yaml
+name: Backend integration tests
+
+on:
+  workflow_call:
+
+env:
+  MEILISEARCH_MASTER_KEY: "aStrongMasterKeyForTestingPurposes"
+  MEILISEARCH_URL: "http://localhost:7700"
+  MEILISEARCH_INDEX_NAME: "articles_test"
+  MEILISEARCH_DOWNLOAD_MAX_RETRIES: "3"
+  MEILISEARCH_DOWNLOAD_RETRY_DELAY: "5"
+
+jobs:
+  tests:
+    name: Run integration tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Download Meilisearch binary
+        run: |
+          MAX_RETRIES="${MEILISEARCH_DOWNLOAD_MAX_RETRIES}"
+          RETRY_DELAY="${MEILISEARCH_DOWNLOAD_RETRY_DELAY}"
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES to download Meilisearch..."
+            if curl -L https://install.meilisearch.com | sh; then
+              echo "Meilisearch downloaded successfully!"
+              chmod +x meilisearch
+              break
+            else
+              if [ $i -lt $MAX_RETRIES ]; then
+                echo "Download failed. Retrying in $RETRY_DELAY seconds..."
+                sleep $RETRY_DELAY
+              else
+                echo "Download failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Start Meilisearch
+        run: |
+          ./meilisearch --master-key="${MEILISEARCH_MASTER_KEY}" &
+          echo "Waiting for Meilisearch to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:7700/health | grep -q "available"; then
+              echo "Meilisearch is ready!"
+              break
+            fi
+            echo "Attempt $i: Meilisearch not ready yet..."
+            sleep 1
+          done
+          if ! curl -s http://localhost:7700/health | grep -q "available"; then
+            echo "Meilisearch failed to start after 30 attempts"
+            exit 1
+          fi
+
+      - name: Run integration tests
+        run: pytest tests/integration --tb=short -v
+        env:
+          MEILISEARCH_URL: ${{ env.MEILISEARCH_URL }}
+          MEILISEARCH_MASTER_KEY: ${{ env.MEILISEARCH_MASTER_KEY }}
+          MEILISEARCH_INDEX_NAME: ${{ env.MEILISEARCH_INDEX_NAME }}
+```
+
+Let's break down the new concepts in this workflow. The first few steps are exactly the same as your other backend jobs: checking out the code, setting up Python, and installing dependencies.
+
+But after that, the workflow changes. Because integration tests need a real database, we have to build that environment from scratch.
+
+```yaml
+- name: Download Meilisearch binary
+  run: |
+    MAX_RETRIES="${MEILISEARCH_DOWNLOAD_MAX_RETRIES}"
+    # ... retry loop logic ...
+      if curl -L https://install.meilisearch.com | sh; then
+```
+
+First, we use `curl` to download the Meilisearch program directly into the Ubuntu runner. Notice the bash retry loop wrapped around it. CI runners share network bandwidth, and sometimes downloads fail. Adding a loop protects your pipeline from temporary network drops so your workflow does not fail by mistake.
+
+```yaml
+- name: Start Meilisearch
+  run: |
+    ./meilisearch --master-key="${MEILISEARCH_MASTER_KEY}" &
+```
+
+This is an important detail. Notice the ampersand (`&`) at the end of the command. This tells the Ubuntu machine to start the database in the background. If you forget the `&`, the pipeline will stop there forever watching the database logs, and it will never move on to run your tests.
+
+```yaml
+echo "Waiting for Meilisearch to start..."
+for i in {1..30}; do
+  if curl -s http://localhost:7700/health | grep -q "available"; then
+    echo "Meilisearch is ready!"
+    break
+  fi
+  sleep 1
+done
+```
+
+This introduces a very important step in integration testing: waiting for services to be ready. Even though the database runs in the background, it takes a few seconds to start up completely.
+
+If `pytest` runs immediately, it will fail to connect. To solve this, we use a simple loop that pings the `health` endpoint once every second. The moment it sees the word "available", the loop breaks and your tests begin.
+
+```yaml
+- name: Run integration tests
+  run: pytest tests/integration --tb=short -v
+  env:
+    MEILISEARCH_URL: ${{ env.MEILISEARCH_URL }}
+```
+
+Finally, we run `pytest`. We take the environment variables defined at the top of the file (like the URL and the master key) and pass them directly into this step. This way, your backend code knows exactly how to talk to the temporary database we just created.
