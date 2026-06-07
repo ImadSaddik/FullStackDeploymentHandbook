@@ -1457,3 +1457,34 @@ rules_file_name: ".github/zap-rules.tsv"
 ```
 
 Security scanners are very strict and often flag things that are not actually dangerous in your specific project (known as false alarms). By creating a `zap-rules.tsv` file, you can tell the scanner to ignore specific warnings. This makes sure your pipeline only fails when there is a real threat, preventing developers from getting tired of useless alerts.
+
+If you run the scan right now, your pipeline might turn red and fail, even if your code is secure. This happens because the DAST scanner is testing your local, basic development server instead of a real live website.
+
+In a real production environment, you likely use a tool like `Nginx` or `Cloudflare` to handle SSL certificates and add security headers (like CORS, Cache-Control, and Strict-Transport-Security). Because your temporary GitHub runner does not use Nginx, ZAP will panic and flag these missing headers as dangerous vulnerabilities.
+
+To prevent the pipeline from failing because of these environment differences, you can create a TSV (Tab-Separated Values) file to quiet specific alerts.
+
+Create a new file at `.github/zap-rules.tsv` and add the following lines:
+
+```tsv
+10096   IGNORE  (Timestamp Disclosure - Unix)
+10106   IGNORE  (HTTP Only Site)
+10021   IGNORE  (X-Content-Type-Options - Handled by Nginx)
+90004   IGNORE  (Insufficient Site Isolation / CORP - Handled by Nginx)
+10020   IGNORE  (X-Frame-Options - Handled by Nginx)
+10035   IGNORE  (Strict-Transport-Security - Handled by Nginx)
+10038   IGNORE  (Content Security Policy - Handled by Nginx)
+10063   IGNORE  (Permissions Policy - Handled by Nginx)
+10055   IGNORE  (CSP Wildcards and Unsafe - Handled by Nginx)
+40040   IGNORE  (CORS Header - Handled by Nginx)
+10049   IGNORE  (Cache Headers - Handled by Nginx)
+10027   IGNORE  (Suspicious Comments - False alarms in outside libraries)
+```
+
+The format of this file is: `<Rule ID>  <ACTION>  <Comment>`.
+
+By marking these specific IDs as `IGNORE`, you are telling ZAP: "We know these headers are missing right now, but Nginx handles them in production, so do not fail our pipeline". You also tell it to ignore the fact that the test site does not use HTTPS, since you are testing on `localhost`.
+
+Your rules file will change as your project grows. When you first add a DAST scanner, you will spend a few hours or days reviewing the results and adding `IGNORE` rules for false alarms.
+
+Over time, this file will stabilize. Once it stops changing, you can completely trust your pipeline: if the DAST scan fails, it means you have a real security issue that needs your immediate attention.
