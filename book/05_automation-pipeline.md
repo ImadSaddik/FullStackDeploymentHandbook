@@ -913,8 +913,6 @@ Up to this point, your pipeline has only looked at static text. It has checked t
 
 In this section, you will bring your application to life inside the GitHub Actions runner. You will start temporary instances of your database, backend, and frontend to show that all the pieces work together well.
 
-To do this, we will follow a clear order. First, you will set up backend integration tests to prove that your API can talk to a live Meilisearch database. Next, you will run end to end tests with Playwright to simulate a real user clicking through your website. Finally, you will use a dynamic security tool to actively scan your running application for vulnerabilities.
-
 To do this, we will follow a clear order. First, you will set up backend integration tests to show that your API can talk to a live Meilisearch database. Next, you will run end-to-end tests with Playwright to simulate a real user clicking through your website. Finally, you will use a dynamic security tool to scan your running application for vulnerabilities.
 
 ### Backend integration tests
