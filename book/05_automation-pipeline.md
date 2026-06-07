@@ -1542,3 +1542,11 @@ Finally, scroll down to the very bottom of your `ci.yml` file and update your `p
 ```
 
 Save and commit your changes. Your GitHub Actions pipeline is now fully equipped to handle integration testing, end-to-end user browser simulations, and live security scans automatically on every single commit.
+
+### What is next?
+
+Congratulations! You have built a complete Continuous Integration pipeline. Every time you push code, GitHub Actions now starts your entire system to make sure your code is clean, works well, and is secure.
+
+But right now, all of that checked code just sits in your repository. It is time to get it to your users.
+
+In **Chapter 5.5: Continuous delivery**, you will connect GitHub to your live production server. You will learn how to safely save server keys using GitHub Secrets, package your final frontend files, and write a secure deployment script. Finally, you will set up automatic daily backups for your database and search engine so you can update your site with full confidence, knowing your data is always safe.
