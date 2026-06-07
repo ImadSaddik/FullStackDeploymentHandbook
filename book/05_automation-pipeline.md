@@ -1488,3 +1488,54 @@ By marking these specific IDs as `IGNORE`, you are telling ZAP: "We know these h
 Your rules file will change as your project grows. When you first add a DAST scanner, you will spend a few hours or days reviewing the results and adding `IGNORE` rules for false alarms.
 
 Over time, this file will stabilize. Once it stops changing, you can completely trust your pipeline: if the DAST scan fails, it means you have a real security issue that needs your immediate attention.
+
+### Updating the orchestrator
+
+Now you can bring everything together by updating your main `ci.yml` file. Open the file and include the new jobs:
+
+```yaml
+# ...
+
+jobs:
+  dast-check:
+    name: Backend
+    needs: backend-lint-format-check
+    uses: ./.github/workflows/dast-scan.yml
+    secrets: inherit
+  
+  backend-integration-tests:
+    name: Backend
+    needs: backend-unit-tests
+    uses: ./.github/workflows/backend-integration-tests.yml
+
+  e2e-tests:
+    name: E2E
+    needs: [frontend-unit-tests, backend-integration-tests]
+    uses: ./.github/workflows/e2e-tests.yml
+```
+
+Finally, scroll down to the very bottom of your `ci.yml` file and update your `pipeline-success` job. You must add the three new jobs to the `needs` list so the pipeline knows to check them before finishing:
+
+```yaml
+  pipeline-success:
+    name: Pipeline success
+    needs:
+      [
+        frontend-vulnerability-check,
+        backend-vulnerability-check,
+        backend-sast-check,
+        frontend-lint-format-check,
+        backend-lint-format-check,
+        frontend-unit-tests,
+        backend-unit-tests,
+        dast-check,
+        backend-integration-tests,
+        e2e-tests,
+      ]
+    runs-on: ubuntu-latest
+    if: always()
+
+# ...
+```
+
+Save and commit your changes. Your GitHub Actions pipeline is now fully equipped to handle integration testing, end-to-end user browser simulations, and live security scans automatically on every single commit.
