@@ -915,6 +915,9 @@ In this section, you will bring your application to life inside the GitHub Actio
 
 To do this, we will follow a clear order. First, you will set up backend integration tests to show that your API can talk to a live Meilisearch database. Next, you will run end-to-end tests with Playwright to simulate a real user clicking through your website. Finally, you will use a dynamic security tool to scan your running application for vulnerabilities.
 
+> [!NOTE]
+> This section does not teach you how to write integration tests or end-to-end tests from scratch. Instead, it shows you how to take your existing tests and wire them into an automated pipeline so they run correctly inside GitHub Actions.
+
 ### Backend integration tests
 
 Unit tests check individual parts of your code, but integration tests show that your backend can successfully work with other services. For this project, the FastAPI backend relies heavily on Meilisearch to handle search queries. If the backend cannot talk to Meilisearch, the application will not work.
