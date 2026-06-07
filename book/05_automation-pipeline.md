@@ -1459,7 +1459,7 @@ By default, the OWASP ZAP GitHub Action tries to open a new GitHub Issue in your
 rules_file_name: ".github/zap-rules.tsv"
 ```
 
-Security scanners are very strict and often flag things that are not actually dangerous in your specific project (known as false alarms). By creating a `zap-rules.tsv` file, you can tell the scanner to ignore specific warnings. This makes sure your pipeline only fails when there is a real threat, preventing developers from getting tired of useless alerts.
+Security scanners are very strict and often flag things that are not actually dangerous in your specific project (false alarms). By creating a `zap-rules.tsv` file, you can tell the scanner to ignore specific warnings. This makes sure your pipeline only fails when there is a real threat, preventing developers from getting tired of useless alerts.
 
 If you run the scan right now, your pipeline might turn red and fail, even if your code is secure. This happens because the DAST scanner is testing your local, basic development server instead of a real live website.
 
