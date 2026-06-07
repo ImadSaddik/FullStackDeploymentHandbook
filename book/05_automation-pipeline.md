@@ -1047,3 +1047,274 @@ If `pytest` runs immediately, it will fail to connect. To solve this, we use a s
 ```
 
 Finally, we run `pytest`. We take the environment variables defined at the top of the file (like the URL and the master key) and pass them directly into this step. This way, your backend code knows exactly how to talk to the temporary database we just created.
+
+### End to end tests
+
+Now that your API is tested, you can add end to end (E2E) tests. These tests rely on a tool like Playwright to open a real browser and simulate how users actually interact with your application.
+
+Because a user needs to see the user interface (UI) and load data, end-to-end tests require the frontend, backend, and database to all run at the same time. With just one end-to-end test, you can make sure that the entire system works together perfectly.
+
+You can install Playwright inside your frontend directory:
+
+```bash
+pnpm create playwright
+```
+
+During installation, Playwright will create a configuration file. Let's update it to include clean settings for your GitHub pipeline, such as retries on failure, GitHub error markers, and an automatic development server.
+
+Create or update your `frontend/playwright.config.js` file:
+
+```javascript
+import { defineConfig, devices } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./tests/e2e",
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: undefined,
+  reporter: process.env.CI ? [["list"], ["github"]] : "html",
+  expect: {
+    timeout: 10 * 1000,
+  },
+  use: {
+    baseURL: "http://localhost:8080",
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+  },
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+  ],
+  webServer: {
+    command: "pnpm run dev",
+    url: "http://localhost:8080",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
+});
+```
+
+Let's break down how this file changes its behavior automatically when it runs inside GitHub Actions.
+
+```javascript
+forbidOnly: !!process.env.CI,
+retries: process.env.CI ? 2 : 0,
+```
+
+When you write tests on your computer, you might use `test.only` to focus on a single test. If you accidentally commit that line, `forbidOnly` will make the GitHub pipeline fail. This stops you from saving code that skips most of your tests. Also, we set `retries` to 2 only in GitHub Actions to retry any tests that fail by mistake due to slow runner environments.
+
+```javascript
+reporter: process.env.CI ? [["list"], ["github"]] : "html",
+```
+
+On your computer, Playwright opens a webpage to show your test results. In a GitHub runner, there is no screen to open that page. Instead, we use the `github` reporter when running in CI. This setting shows errors directly inside the GitHub Actions interface, making mistakes very easy to find.
+
+```javascript
+webServer: {
+  command: "pnpm run dev",
+  url: "http://localhost:8080",
+  reuseExistingServer: !process.env.CI,
+},
+```
+
+Instead of writing complex scripts to start your frontend server before running tests, Playwright handles it for you. It runs your startup command and checks the URL until the page responds. The `reuseExistingServer` line means that on your computer, it will use your already running server, but in GitHub Actions, it will start a brand new one.
+
+With the configuration ready, you can create the CI workflow. This workflow will take the most time because it starts the entire system.
+
+Create a new file at `.github/workflows/e2e-tests.yml`:
+
+```yaml
+name: E2E tests
+
+on:
+  workflow_call:
+
+env:
+  MEILISEARCH_MASTER_KEY: "aStrongMasterKeyForTestingPurposes"
+  MEILISEARCH_URL: "http://localhost:7700"
+  MEILISEARCH_INDEX_NAME: "articles_test"
+  MEILISEARCH_DOWNLOAD_MAX_RETRIES: "3"
+  MEILISEARCH_DOWNLOAD_RETRY_DELAY: "5"
+
+jobs:
+  tests:
+    name: Run E2E tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: pip install -r requirements.txt
+
+      - name: Download Meilisearch binary
+        working-directory: ./backend
+        run: |
+          MAX_RETRIES="${MEILISEARCH_DOWNLOAD_MAX_RETRIES}"
+          RETRY_DELAY="${MEILISEARCH_DOWNLOAD_RETRY_DELAY}"
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES to download Meilisearch..."
+            if curl -L https://install.meilisearch.com | sh; then
+              echo "Meilisearch downloaded successfully!"
+              chmod +x meilisearch
+              break
+            else
+              if [ $i -lt $MAX_RETRIES ]; then
+                echo "Download failed. Retrying in $RETRY_DELAY seconds..."
+                sleep $RETRY_DELAY
+              else
+                echo "Download failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Start Meilisearch
+        working-directory: ./backend
+        run: |
+          ./meilisearch --master-key="${MEILISEARCH_MASTER_KEY}" &
+          echo "Waiting for Meilisearch to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:7700/health | grep -q "available"; then
+              echo "Meilisearch is ready!"
+              break
+            fi
+            echo "Attempt $i: Meilisearch not ready yet..."
+            sleep 1
+          done
+          if ! curl -s http://localhost:7700/health | grep -q "available"; then
+            echo "Meilisearch failed to start after 30 attempts"
+            exit 1
+          fi
+
+      - name: Start backend server
+        working-directory: ./backend
+        run: |
+          uvicorn main:app --host 0.0.0.0 --port 8000 &
+          echo "Waiting for backend to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/api/health | grep -q "ok"; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Attempt $i: Backend not ready yet..."
+            sleep 1
+          done
+          if ! curl -s http://localhost:8000/api/health | grep -q "ok"; then
+            echo "Backend failed to start after 30 attempts"
+            exit 1
+          fi
+        env:
+          MEILISEARCH_URL: ${{ env.MEILISEARCH_URL }}
+          MEILISEARCH_MASTER_KEY: ${{ env.MEILISEARCH_MASTER_KEY }}
+          MEILISEARCH_INDEX_NAME: ${{ env.MEILISEARCH_INDEX_NAME }}
+
+      - name: Seed E2E test data
+        working-directory: ./backend
+        run: python -m tests.test_data
+        env:
+          MEILISEARCH_URL: ${{ env.MEILISEARCH_URL }}
+          MEILISEARCH_MASTER_KEY: ${{ env.MEILISEARCH_MASTER_KEY }}
+          MEILISEARCH_INDEX_NAME: ${{ env.MEILISEARCH_INDEX_NAME }}
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: pnpm install
+
+      - name: Get Playwright version
+        id: playwright-version
+        working-directory: ./frontend
+        run: echo "version=$(pnpm list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browsers (if no cache)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: ./frontend
+        run: pnpm exec playwright install --with-deps chromium firefox
+
+      - name: Install Playwright dependencies (if cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: ./frontend
+        run: pnpm exec playwright install-deps chromium firefox
+
+      - name: Run E2E tests
+        working-directory: ./frontend
+        run: pnpm run test:e2e
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v5
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+```
+
+Let's look at the new concepts introduced in this workflow.
+
+```yaml
+- name: Seed E2E test data
+  working-directory: ./backend
+  run: python -m tests.test_data
+```
+
+Before running Playwright, the application cannot be empty. If a test tries to click on an article that is not there, it will fail. This step runs a Python script to fill the temporary Meilisearch database with test data so the browser has something to interact with.
+
+```yaml
+- name: Cache Playwright browsers
+  uses: actions/cache@v4
+  id: playwright-cache
+  with:
+    path: ~/.cache/ms-playwright
+    key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+```
+
+Every time Playwright runs, it downloads large browser programs. Doing this on every commit wastes time. By using `actions/cache@v4`, we save the downloaded browsers. The extra steps make sure we only download the browsers if the saved ones are missing, saving you a minute or more of waiting time.
+
+```yaml
+- name: Upload Playwright report
+  uses: actions/upload-artifact@v5
+  if: ${{ !cancelled() }}
+  with:
+    name: playwright-report
+    path: frontend/playwright-report/
+```
+
+If an E2E test fails, it is hard to know why just by looking at text files. Playwright creates a helpful report with screenshots and recordings. The `upload-artifact` step takes this folder and attaches it to the GitHub Actions page. You can download it to see exactly what the browser saw when the test failed. Using `if: ${{ !cancelled() }}` guarantees that the report saves even when your tests fail.
