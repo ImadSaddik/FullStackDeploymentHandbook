@@ -906,3 +906,13 @@ Commit and push these changes. If you open a pull request now, you will see your
 Your pipeline is now extremely robust. It automatically audits your dependencies, scans your source code for bad practices, enforces strict formatting, and verifies your logic with unit tests. However, all of these checks are "static"; they look at the code while it is sitting still.
 
 In **Chapter 5.4: Advanced testing & DAST**, you will take the pipeline to the next level. You will learn how to start your application inside the CI runner (including the FastAPI backend, the Vue frontend, and a temporary Meilisearch database). Once the app is running, you will execute Playwright End-to-End tests and use OWASP ZAP to dynamically attack your API, proving that your application is secure when it is fully alive.
+
+## Advanced testing & DAST
+
+Up to this point, your pipeline has only looked at static text. It has checked the formatting, scanned for secrets, and run isolated unit tests. However, a modern web application is not a static script; it is a live system of connected services.
+
+In this section, you will bring your application to life inside the GitHub Actions runner. You will start temporary instances of your database, backend, and frontend to show that all the pieces work together well.
+
+To do this, we will follow a clear order. First, you will set up backend integration tests to prove that your API can talk to a live Meilisearch database. Next, you will run end to end tests with Playwright to simulate a real user clicking through your website. Finally, you will use a dynamic security tool to actively scan your running application for vulnerabilities.
+
+To do this, we will follow a clear order. First, you will set up backend integration tests to show that your API can talk to a live Meilisearch database. Next, you will run end-to-end tests with Playwright to simulate a real user clicking through your website. Finally, you will use a dynamic security tool to scan your running application for vulnerabilities.
