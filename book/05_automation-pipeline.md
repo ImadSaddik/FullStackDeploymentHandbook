@@ -1550,3 +1550,17 @@ Congratulations! You have built a complete Continuous Integration pipeline. Ever
 But right now, all of that checked code just sits in your repository. It is time to get it to your users.
 
 In **Chapter 5.5: Continuous delivery**, you will connect GitHub to your live production server. You will learn how to safely save server keys using GitHub Secrets, package your final frontend files, and write a secure deployment script. Finally, you will set up automatic daily backups for your database and search engine so you can update your site with full confidence, knowing your data is always safe.
+
+## Continuous delivery
+
+You have tested the code and scanned it for vulnerabilities. The final step is moving everything to your DigitalOcean production server. But before you can deploy, you need to compile your application and set up a secure way to transfer those files.
+
+However, you should not deploy to production completely automatically just yet. Even with the best tests in the world, you want an approval step that pauses the pipeline and waits for a human to hit the approve button before overwriting live code.
+
+In this subchapter, you will implement a secure deployment workflow that:
+
+1. Compiles your Vue frontend into a ready-to-serve artifact.
+2. Creates a backup of your live database and search engine.
+3. Safely transfers the new code and the built frontend to the server.
+4. Performs an atomic swap of your Python virtual environment.
+5. Restarts the backend and reloads the web server.
