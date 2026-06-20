@@ -1772,3 +1772,75 @@ Let's look at why we are ignoring these specific files:
 - **`backend/venv/` and `frontend/node_modules/**`: You should never upload your local dependencies to a Linux server. The server will install its own fresh, optimized packages later in the deployment process.
 
 Make sure to commit this file and push it to your `master` branch. With this safeguard in place, your data is protected no matter how many times you deploy.
+
+### Configure GitHub environments and secrets
+
+Your pipeline needs a safe way to log in to your DigitalOcean server. You also want an extra layer of protection so nobody can deploy code by mistake. You can do both by setting up a GitHub environment and storing your sensitive information as secrets.
+
+First, let's configure the environment and set up an approval gate. Even though you will trigger the deployment manually, adding a reviewer makes it impossible for an unauthorized person to push code to your live server.
+
+1. Go to your repository **Settings**.
+2. Click **Environments** on the left sidebar.
+3. Click **New environment**.
+
+    ![Screenshot highlighting the steps needed to create a new environment](./images/5_5_1_create_new_environment.png)
+    _Click the **New environment** button._
+
+4. Type `production` in the text field and click **Configure environment**.
+
+    ![Typing production in the environment text field](./images/5_5_2_production_environment_text_field.png)
+    _Enter the environment name and configure it._
+
+5. Check the box for **Required reviewers**.
+6. Search for your GitHub username, select it, and click **Save protection rules**.
+
+![Selecting the required reviewers option and saving protection rules](./images/5_5_3_configure_production_environment.png)
+_Select a required reviewer and save the environment rules._
+
+Now, whenever your deployment job runs, GitHub will pause and ask for your explicit approval before touching the server.
+
+Next, you need to add your server credentials. Go to **Settings**, look for **Secrets and variables** in the left sidebar, click **Actions**, and then click the **New repository secret** button.
+
+![Adding secrets to the repository by clicking on the new repository secret button.](./images/5_5_4_add_secrets_variables_repo.png)
+_Add secrets to your repository by clicking on the new repository secret button._
+
+You need to add these four secrets:
+
+- **DIGITAL_OCEAN_HOST_IP**: The IP address of your DigitalOcean Droplet.
+- **DIGITAL_OCEAN_USERNAME**: The server username you created earlier.
+- **MEILISEARCH_MASTER_KEY**: The master key you use for your Meilisearch database.
+- **DIGITAL_OCEAN_SSH_KEY**: A private SSH key that allows GitHub to log in to your server.
+
+![Adding secrets to the repository by clicking on the new repository secret button.](./images/5_5_5_add_secret_page.png)
+_Provide the secret name and its value, then click **Add secret**_
+
+If you do not have a dedicated SSH key for GitHub yet, you can create one quickly. Open your local terminal and generate a new key without a passphrase:
+
+```bash
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/github_actions_key -C "github_actions"
+```
+
+> [!NOTE]
+> When you run this command, it will ask you to create a passphrase. Just press `Enter` to skip it. Because this key is for an automated pipeline, the system needs to use it in the background without human intervention. If you add a passphrase, the pipeline will get stuck waiting for someone to type it in, causing your deployment to fail.
+
+Print the public key to your screen and copy it:
+
+```bash
+cat ~/.ssh/github_actions_key.pub
+```
+
+Log in to your DigitalOcean server. Open your authorized keys file:
+
+```bash
+nano ~/.ssh/authorized_keys
+```
+
+Paste the public key at the very bottom of the file and save it.
+
+Finally, go back to your local computer and print the private key:
+
+```bash
+cat ~/.ssh/github_actions_key
+```
+
+Copy the entire block of text, including the top header and the bottom footer. Paste this exact text into GitHub as the value for your **DIGITAL_OCEAN_SSH_KEY** secret.
