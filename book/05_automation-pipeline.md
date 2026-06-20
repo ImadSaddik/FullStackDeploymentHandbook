@@ -1844,3 +1844,450 @@ cat ~/.ssh/github_actions_key
 ```
 
 Copy the entire block of text, including the top header and the bottom footer. Paste this exact text into GitHub as the value for your **DIGITAL_OCEAN_SSH_KEY** secret.
+
+### The deployment workflow
+
+You are ready to write the deployment pipeline. Since we decided to separate the deployment from the testing pipeline to avoid the timeout issue, this workflow will use a manual trigger.
+
+This script is long because it contains several advanced engineering practices. It backs up your data, verifies the search engine dump, performs a safe update of your Python environment, and tests your web server configuration before restarting.
+
+Create a file named `deploy.yml` inside `.github/workflows/`. Paste the following complete configuration:
+
+```yaml
+name: Manual deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build frontend
+    uses: ./.github/workflows/frontend-build.yml
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://imadsaddik.com
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: frontend-build
+          path: ./frontend/dist
+
+      - name: Create backups (SQLite & Meilisearch)
+        uses: appleboy/ssh-action@v1.2.4
+        env:
+          MEILISEARCH_KEY: ${{ secrets.MEILISEARCH_MASTER_KEY }}
+        with:
+          host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+          username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+          key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+          envs: MEILISEARCH_KEY
+          script: |
+            set -e
+
+            BACKEND_DIR="/web_app/backend"
+            BACKUP_DIR="/web_app/backups"
+            BACKUP_RETENTION_COUNT=5
+            TIMESTAMP=$(date +%Y%m%d%H%M%S)
+
+            mkdir -p $BACKUP_DIR
+
+            echo "Backing up SQLite database..."
+            if [ -f "$BACKEND_DIR/visitors.db" ]; then
+              cp "$BACKEND_DIR/visitors.db" "$BACKUP_DIR/visitors_$TIMESTAMP.db"
+              echo "SQLite backup created successfully."
+            else
+              echo "Warning: No SQLite database found in $BACKEND_DIR"
+            fi
+
+            echo "Triggering Meilisearch dump..."
+            if [ -z "$MEILISEARCH_KEY" ]; then
+              echo "Error: MEILISEARCH_KEY secret is empty."
+              exit 1
+            fi
+
+            DUMP_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST 'http://127.0.0.1:7700/dumps' \
+              -H "Authorization: Bearer $MEILISEARCH_KEY")
+            HTTP_CODE=$(echo "$DUMP_RESPONSE" | tail -n1)
+            RESPONSE_BODY=$(echo "$DUMP_RESPONSE" | sed '$d')
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "Meilisearch dump request accepted (HTTP $HTTP_CODE)."
+
+              TASK_UID=$(echo "$RESPONSE_BODY" | grep -o '"taskUid":[0-9]*' | cut -d':' -f2)
+              if [ -z "$TASK_UID" ]; then
+                echo "Error: Could not extract taskUid from response."
+                echo "Response: $RESPONSE_BODY"
+                exit 1
+              fi
+
+              echo "Dump task created with UID: $TASK_UID"
+              echo "Waiting for dump to complete..."
+
+              # Poll task status until completion (max 60 seconds)
+              MAX_ATTEMPTS=30
+              ATTEMPT=0
+              while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                TASK_RESPONSE=$(curl -s "http://127.0.0.1:7700/tasks/$TASK_UID" \
+                  -H "Authorization: Bearer $MEILISEARCH_KEY")
+                TASK_STATUS=$(echo "$TASK_RESPONSE" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+
+                if [ "$TASK_STATUS" = "succeeded" ]; then
+                  echo "Meilisearch dump completed successfully."
+                  break
+                elif [ "$TASK_STATUS" = "failed" ]; then
+                  echo "Error: Meilisearch dump task failed."
+                  echo "Task response: $TASK_RESPONSE"
+                  exit 1
+                else
+                  # Status is "enqueued" or "processing"
+                  ATTEMPT=$((ATTEMPT + 1))
+                  sleep 2
+                fi
+              done
+
+              if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+                echo "Error: Meilisearch dump timed out after 60 seconds."
+                echo "Last task status: $TASK_STATUS"
+                exit 1
+              fi
+            else
+              echo "Error: Meilisearch dump request failed with HTTP $HTTP_CODE"
+              echo "Response: $RESPONSE_BODY"
+              exit 1
+            fi
+
+            # 4. Rolling Retention
+            echo "Cleaning old backups..."
+            sudo /usr/local/bin/clean_backups.sh $BACKUP_RETENTION_COUNT
+            echo "Backup process finished successfully."
+
+      - name: Rsync files to droplet
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+          REMOTE_USER: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+          SOURCE: "./"
+          TARGET: "/web_app/"
+          ARGS: "-avzr --delete --exclude-from='rsync_exclude.txt'"
+
+      - name: Create backend .env file
+        uses: appleboy/ssh-action@v1.2.4
+        env:
+          MEILISEARCH_KEY: ${{ secrets.MEILISEARCH_MASTER_KEY }}
+        with:
+          host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+          username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+          key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+          envs: MEILISEARCH_KEY
+          script: |
+            echo "Creating backend .env file..."
+            cat > /web_app/backend/.env <<EOF
+            MEILISEARCH_URL=http://127.0.0.1:7700
+            MEILISEARCH_INDEX_NAME=articles
+            MEILISEARCH_MASTER_KEY=$MEILISEARCH_KEY
+            ENVIRONMENT=production
+            EOF
+
+      - name: Install Python dependencies (atomic venv swap)
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+          username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+          key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+          script: |
+            set -e
+
+            BACKEND_DIR="/web_app/backend"
+            cd $BACKEND_DIR
+
+            echo "Backing up current venv..."
+            if [ -d "venv" ]; then
+              mv venv venv_backup
+              echo "Current venv backed up to venv_backup."
+            fi
+
+            echo "Creating new virtual environment..."
+            python3 -m venv venv
+
+            echo "Installing Python dependencies..."
+            source venv/bin/activate
+            if pip install -r requirements.txt; then
+              echo "Python dependencies installed successfully."
+            else
+              echo "Error: Failed to install Python dependencies."
+              echo "Rolling back to previous venv..."
+              deactivate
+              rm -rf venv
+              if [ -d "venv_backup" ]; then
+                mv venv_backup venv
+                echo "Rollback complete."
+              fi
+              exit 1
+            fi
+            deactivate
+
+            echo "Copying custom files from backup venv..."
+            # Copy gunicorn_start script
+            if [ -f "venv_backup/bin/gunicorn_start" ]; then
+              cp venv_backup/bin/gunicorn_start venv/bin/gunicorn_start
+              chmod +x venv/bin/gunicorn_start
+              echo "Copied gunicorn_start script."
+            fi
+
+            # Copy logs directory (preserve existing logs)
+            if [ -d "venv_backup/logs" ]; then
+              cp -r venv_backup/logs venv/
+              echo "Copied logs directory."
+            else
+              mkdir -p venv/logs
+              echo "Created new logs directory."
+            fi
+
+            # Create run directory for socket file
+            mkdir -p venv/run
+            echo "Created run directory for socket."
+
+            # Clean up backup after successful deploy
+            if [ -d "venv_backup" ]; then
+              rm -rf venv_backup
+              echo "Cleaned up venv_backup."
+            fi
+
+            echo "Virtual environment setup completed successfully."
+
+      - name: Restart backend service
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+          username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+          key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "Restarting FastAPI backend service..."
+            if sudo supervisorctl restart imadsaddik_com; then
+              echo "FastAPI backend restarted successfully."
+            else
+              echo "Error: Failed to restart FastAPI backend."
+              exit 1
+            fi
+
+            # Verify the service is running
+            sleep 5
+            if sudo supervisorctl status imadsaddik_com | grep -q "RUNNING"; then
+              echo "FastAPI backend is running."
+            else
+              echo "Error: FastAPI backend failed to start properly."
+              sudo supervisorctl status imadsaddik_com
+              exit 1
+            fi
+
+      - name: Reload Nginx
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+          username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+          key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "Testing Nginx configuration..."
+            if sudo nginx -t; then
+              echo "Nginx configuration is valid."
+            else
+              echo "Error: Nginx configuration test failed."
+              exit 1
+            fi
+
+            echo "Reloading Nginx..."
+            if sudo nginx -t; then
+              echo "Configuration OK. Reloading Nginx..."
+              sudo systemctl reload nginx
+            else
+              echo "Nginx configuration test failed! Not reloading."
+              exit 1
+            fi
+
+            echo "Deployment complete!"
+```
+
+Because this workflow is doing a lot of heavy lifting, let us break it down into specific stages to understand how it protects your live website.
+
+#### The manual trigger and frontend build
+
+```yaml
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build frontend
+    uses: ./.github/workflows/frontend-build.yml
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://imadsaddik.com
+
+# ...
+```
+
+The `workflow_dispatch` command adds a "Run workflow" button to your GitHub Actions page.
+
+![The GitHub Actions interface highlighting the 'Run workflow' dropdown menu and button.](./images/5_5_6_run_workflow_manually.png)
+_Click the **Run workflow** button to start the deployment._
+
+When you click it, the pipeline starts and immediately calls the reusable `frontend-build.yml` file to compile a fresh version of your Vue code. Next, it hits the `environment: production` block. GitHub stops the pipeline here and sends you an email. The deployment will not continue until you click the approve button.
+
+![The GitHub Actions interface displaying a deployment paused status waiting for production environment review.](./images/5_5_7_waiting_for_approval_before_deployment.png)
+_Click **Review deployments**, select **production**, and click **Approve and deploy**._
+
+#### Safe backups with polling
+
+```yaml
+- name: Create backups (SQLite & Meilisearch)
+  uses: appleboy/ssh-action@v1.2.4
+  env:
+    MEILISEARCH_KEY: ${{ secrets.MEILISEARCH_MASTER_KEY }}
+  with:
+    host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+    username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+    key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+    envs: MEILISEARCH_KEY
+    script: |
+      # ...
+
+      echo "Triggering Meilisearch dump..."
+      DUMP_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST 'http://127.0.0.1:7700/dumps' \
+        -H "Authorization: Bearer $MEILISEARCH_KEY")
+      
+      # ...
+
+      # Poll task status until completion (max 60 seconds)
+      MAX_ATTEMPTS=30
+      ATTEMPT=0
+      while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+        TASK_RESPONSE=$(curl -s "http://127.0.0.1:7700/tasks/$TASK_UID" \
+          -H "Authorization: Bearer $MEILISEARCH_KEY")
+        TASK_STATUS=$(echo "$TASK_RESPONSE" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+
+        if [ "$TASK_STATUS" = "succeeded" ]; then
+          echo "Meilisearch dump completed successfully."
+          break
+        # ...
+```
+
+Instead of trusting the backup process blindly, the script copies your SQLite database and then triggers a Meilisearch dump. However, creating a dump takes time.
+
+The script captures the `taskUid` from the search engine and enters a `while` loop, checking the status every two seconds. It waits to confirm the backup is totally successful before moving forward.
+
+#### The rsync transfer
+
+```yaml
+- name: Rsync files to droplet
+  uses: easingthemes/ssh-deploy@v5.1.0
+  with:
+    SSH_PRIVATE_KEY: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+    REMOTE_HOST: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+    REMOTE_USER: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+    SOURCE: "./"
+    TARGET: "/web_app/"
+    ARGS: "-avzr --delete --exclude-from='rsync_exclude.txt'"
+```
+
+The `easingthemes/ssh-deploy` action takes the files from your GitHub repository and pushes them to your server. It reads the `rsync_exclude.txt` file we wrote earlier so it knows exactly which files it is not allowed to touch or delete.
+
+#### The atomic virtual environment swap
+
+```yaml
+- name: Install Python dependencies (atomic venv swap)
+  uses: appleboy/ssh-action@v1.2.4
+  with:
+    host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+    username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+    key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+    script: |
+      # ...
+      echo "Backing up current venv..."
+      if [ -d "venv" ]; then
+        mv venv venv_backup
+      fi
+
+      echo "Creating new virtual environment..."
+      python3 -m venv venv
+      source venv/bin/activate
+
+      if pip install -r requirements.txt; then
+        echo "Python dependencies installed successfully."
+      else
+        echo "Rolling back to previous venv..."
+        deactivate
+        rm -rf venv
+        if [ -d "venv_backup" ]; then
+          mv venv_backup venv
+          echo "Rollback complete."
+        fi
+        exit 1
+      fi
+      # ...
+```
+
+When updating Python dependencies, things can easily break if a package fails to download. To prevent downtime, this script uses an atomic swap. It backs up your old virtual environment and builds a brand new one.
+
+If the new installation fails at any point, the script catches the error and instantly restores your old environment. Your live website stays up and running the whole time.
+
+#### Service verification
+
+```yaml
+- name: Restart backend service
+  uses: appleboy/ssh-action@v1.2.4
+  with:
+    host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+    username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+    key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+    script: |
+      # ...
+
+      sudo supervisorctl restart imadsaddik_com
+      
+      sleep 5
+      if sudo supervisorctl status imadsaddik_com | grep -q "RUNNING"; then
+        echo "FastAPI backend is running."
+      else
+        exit 1
+      fi
+
+- name: Reload Nginx
+  uses: appleboy/ssh-action@v1.2.4
+  with:
+    host: ${{ secrets.DIGITAL_OCEAN_HOST_IP }}
+    username: ${{ secrets.DIGITAL_OCEAN_USERNAME }}
+    key: ${{ secrets.DIGITAL_OCEAN_SSH_KEY }}
+    script: |
+      # ...
+  
+      echo "Testing Nginx configuration..."
+      if sudo nginx -t; then
+        sudo systemctl reload nginx
+      else
+        exit 1
+      fi
+```
+
+Finally, the script restarts your systems. But before it brings the web server down, it runs `nginx -t` to check your configuration files for mistakes.
+
+If it finds a syntax error, it cancels the reload. For the backend, it tells Supervisor to restart FastAPI, pauses for five seconds, and checks the status to verify the service is running properly.
