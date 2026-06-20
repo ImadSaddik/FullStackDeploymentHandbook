@@ -1654,3 +1654,82 @@ jobs:
 ```
 
 This integrates the frontend build process into your main workflow. By adding `frontend-build` to the `pipeline-success` job's `needs` array, you ensure that the final success status depends on the build completing successfully alongside your tests and security checks.
+
+### Prepare the server scripts
+
+Before GitHub can deploy your code, your DigitalOcean server needs to be ready to receive it. You need to set up two things:
+
+- **A backup management system:** This ensures your server's disk does not fill up.
+- **Specific permissions:** This allows your pipeline to restart services without getting stuck asking for a password.
+
+First, let's handle the backups. Every time you deploy, you should back up your application data and any databases you are using. But if you keep every single backup forever, your server will eventually run out of storage.
+
+You can solve this using a rolling retention strategy. This means keeping a specific number of recent backups and automatically deleting the older ones.
+
+Create a new file on your server:
+
+```bash
+sudo nano /usr/local/bin/clean_backups.sh
+```
+
+Paste the following code into the file:
+
+```bash
+#!/bin/bash
+
+# 1. Get the number of backups to keep from the first argument
+# ${1:-5} means: "Use argument 1, but if it is empty, default to 5"
+KEEP_COUNT=${1:-5}
+
+# 2. Calculate the offset for tail
+# If we want to keep 5, we need to start deleting from the 6th file.
+# So Offset = Keep Count + 1
+OFFSET=$((KEEP_COUNT + 1))
+
+echo "Starting cleanup. Retention policy: Keep last $KEEP_COUNT files."
+
+clean_old_files() {
+  TARGET_DIR=$1
+  if [ -d "$TARGET_DIR" ]; then
+    echo "Cleaning $TARGET_DIR"
+    cd "$TARGET_DIR" || exit
+    ls -tp | grep -v '/$' | tail -n +$OFFSET | xargs -I {} rm -- "{}"
+  else
+    echo "Directory $TARGET_DIR does not exist. Skipping."
+  fi
+}
+
+clean_old_files "/web_app/backups"
+clean_old_files "/var/lib/meilisearch/dumps"
+```
+
+Let's break down how this works. The script takes one argument which is the number of backups to keep. It calculates an offset and then calls a function named `clean_old_files` to do handle the cleanup. This function lists all files ordered by time, skips the most recent ones using `tail`, and deletes the rest.
+
+Make the script executable so it can be run by your pipeline:
+
+```bash
+sudo chmod +x /usr/local/bin/clean_backups.sh
+```
+
+Next, we need to fix a permission issue. When your GitHub Action deploys the code, it needs to restart Nginx and Supervisor, and run the backup script. These commands require `sudo`.
+
+If you run these manually, Linux stops and asks you to type your password. A continuous integration pipeline cannot type a password, so the deployment will freeze and fail.
+
+To fix this, you can give your specific user permission to run those exact commands without a password.
+
+Open the sudoers file safely by running:
+
+```bash
+sudo visudo
+```
+
+Scroll to the very bottom of the file and add this line:
+
+```text
+<your_username> ALL=(ALL) NOPASSWD: /usr/bin/systemctl reload nginx, /usr/bin/supervisorctl restart all, /usr/local/bin/clean_backups.sh
+```
+
+> [!NOTE]
+> Replace `<your_username>` with your actual server username
+
+This is a very secure approach. Even if someone steals your automated SSH keys, they can only reload Nginx, restart Supervisor, or delete old backups. If they try to run any other `sudo` command, Linux will block them and demand a password.
