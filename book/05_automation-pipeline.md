@@ -1769,7 +1769,7 @@ Let's look at why we are ignoring these specific files:
 - **`backend/visitors.db`**: This line protects your live SQLite database from being overwritten or deleted.
 - **`.env`**: Ignoring this file prevents you from accidentally leaking your testing keys to the live environment.
 - **`backups/`**: This tells `rsync` to keep its hands off the server backup folder.
-- **`backend/venv/` and `frontend/node_modules/**`: You should never upload your local dependencies to a Linux server. The server will install its own fresh, optimized packages later in the deployment process.
+- **`backend/venv/` and `frontend/node_modules/`**: You should never upload your local dependencies to a Linux server. The server will install its own fresh, optimized packages later in the deployment process.
 
 Make sure to commit this file and push it to your `master` branch. With this safeguard in place, your data is protected no matter how many times you deploy.
 
