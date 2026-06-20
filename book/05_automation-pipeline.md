@@ -1794,8 +1794,8 @@ First, let's configure the environment and set up an approval gate. Even though 
 5. Check the box for **Required reviewers**.
 6. Search for your GitHub username, select it, and click **Save protection rules**.
 
-![Selecting the required reviewers option and saving protection rules](./images/5_5_3_configure_production_environment.png)
-_Select a required reviewer and save the environment rules._
+    ![Selecting the required reviewers option and saving protection rules](./images/5_5_3_configure_production_environment.png)
+    _Select a required reviewer and save the environment rules._
 
 Now, whenever your deployment job runs, GitHub will pause and ask for your explicit approval before touching the server.
 
