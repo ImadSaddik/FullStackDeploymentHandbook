@@ -1564,3 +1564,56 @@ In this subchapter, you will implement a secure deployment workflow that:
 3. Safely transfers the new code and the built frontend to the server.
 4. Performs an atomic swap of your Python virtual environment.
 5. Restarts the backend and reloads the web server.
+
+### The frontend build stage
+
+Before you can push your web application to a server, you need to compile the Vue framework code into pure, static HTML, CSS, and JavaScript files that Nginx can serve to your users.
+
+Create a new file at `.github/workflows/frontend-build.yml` to handle this step:
+
+```yaml
+name: Frontend build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build frontend
+        run: pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: frontend-build
+          path: frontend/dist
+          retention-days: 1
+```
+
+This reusable workflow sets up your environment by installing pnpm and Node.js. It then runs `pnpm install` to grab your dependencies and `pnpm build` to compile the frontend code.
+
+The essential part is the final step. Because the deployment will happen in a completely different job on a different runner, the compiled `dist` folder will be lost if you do not save it. The `upload-artifact` action takes the built output and safely stores it in GitHub for 1 day, allowing your deployment job to download it later.
