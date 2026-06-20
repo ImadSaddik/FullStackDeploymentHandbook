@@ -1733,3 +1733,42 @@ Scroll to the very bottom of the file and add this line:
 > Replace `<your_username>` with your actual server username
 
 This is a very secure approach. Even if someone steals your automated SSH keys, they can only reload Nginx, restart Supervisor, or delete old backups. If they try to run any other `sudo` command, Linux will block them and demand a password.
+
+### Protect the data with an exclude file
+
+In the final deployment stage, you will use a tool called `rsync` to move your files from GitHub to DigitalOcean. `rsync` is fast and efficient, but it is also aggressive.
+
+When you tell `rsync` to sync your repository to the server, it makes the server look exactly like your GitHub repository. If a file exists on the server but not on GitHub, `rsync` will delete it. This means it would happily delete your live production database and your backup folders.
+
+To stop this from happening, you need to create an exclude file. This file tells `rsync` which files and folders it should completely ignore during the transfer.
+
+Create a file named `rsync_exclude.txt` in the root directory of your project on your local computer:
+
+```text
+*.pyc
+
+.env
+.git/
+.github/
+.gitignore
+.DS_Store
+
+rsync_exclude.txt
+backups/
+
+frontend/node_modules/
+frontend/dist/analytics.html
+
+backend/venv/
+backend/__pycache__/
+backend/visitors.db
+```
+
+Let's look at why we are ignoring these specific files:
+
+- **`backend/visitors.db`**: This line protects your live SQLite database from being overwritten or deleted.
+- **`.env`**: Ignoring this file prevents you from accidentally leaking your testing keys to the live environment.
+- **`backups/`**: This tells `rsync` to keep its hands off the server backup folder.
+- **`backend/venv/` and `frontend/node_modules/**`: You should never upload your local dependencies to a Linux server. The server will install its own fresh, optimized packages later in the deployment process.
+
+Make sure to commit this file and push it to your `master` branch. With this safeguard in place, your data is protected no matter how many times you deploy.
