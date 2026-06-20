@@ -2291,3 +2291,35 @@ If the new installation fails at any point, the script catches the error and ins
 Finally, the script restarts your systems. But before it brings the web server down, it runs `nginx -t` to check your configuration files for mistakes.
 
 If it finds a syntax error, it cancels the reload. For the backend, it tells Supervisor to restart FastAPI, pauses for five seconds, and checks the status to verify the service is running properly.
+
+### Trigger your first deployment
+
+Because we separated continuous integration (testing) from continuous delivery (deployment), your master `ci.yml` orchestrator is already complete. It will run automatically when you push code, verify your tests, build your frontend, and finish with a green checkmark.
+
+Now, it is time to use your new manual deployment pipeline.
+
+The first step is to open a pull request. Create a new branch in your local repository, commit the files you created in this subchapter, and push them to GitHub. Once pushed, open a pull request on GitHub and merge it into the `master` branch after your continuous integration checks pass successfully.
+
+With the changes merged, navigate to GitHub Actions. Open your repository on GitHub and click the Actions tab located near the top of the page.
+
+![GitHub repository interface with an arrow pointing to the Actions tab located near the top navigation bar](./images/5_5_8_actions_tab_github.png)
+_Navigating to the Actions tab on GitHub._
+
+Next, you need to select the workflow. Look at the left sidebar, where you will see a list of your workflows. Find and click on the one named **Manual deploy**.
+
+![GitHub Actions page with the left sidebar highlighting the Manual deploy workflow entry](./images/5_5_9_github_actions_sidebar.png)
+_Selecting the Manual deploy workflow from the Actions sidebar._
+
+Finally, you can run the workflow to start the deployment. On the right side of the screen, click the **Run workflow** dropdown menu. Confirm that the selected branch is set to `master`, and then click the green **Run workflow** button to execute the pipeline.
+
+![The GitHub Actions interface highlighting the 'Run workflow' dropdown menu and button.](./images/5_5_6_run_workflow_manually.png)
+_Click the **Run workflow** button to start the deployment._
+
+GitHub will start the pipeline, download your repository, and build a fresh copy of your frontend artifact. Once the build finishes, the pipeline will pause.
+
+Because you set up the `production` environment gate earlier, the pipeline will halt and send you an email. On your GitHub Actions screen, you will see a prompt asking to **Review deployments**.
+
+![The GitHub Actions interface displaying a deployment paused status waiting for production environment review.](./images/5_5_7_waiting_for_approval_before_deployment.png)
+_Click **Review deployments**, select **production**, and click **Approve and deploy**._
+
+Click it, approve the run, and watch the logs. GitHub will log into your DigitalOcean server, back up your database and search engine, sync your new code using your exclude file, swap your virtual environments, and securely restart your application with zero downtime.
