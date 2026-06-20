@@ -1617,3 +1617,40 @@ jobs:
 This reusable workflow sets up your environment by installing pnpm and Node.js. It then runs `pnpm install` to grab your dependencies and `pnpm build` to compile the frontend code.
 
 The essential part is the final step. Because the deployment will happen in a completely different job on a different runner, the compiled `dist` folder will be lost if you do not save it. The `upload-artifact` action takes the built output and safely stores it in GitHub for 1 day, allowing your deployment job to download it later.
+
+Open `ci.yml` and add the new job to the pipeline:
+
+```yaml
+# ...
+
+jobs:
+  frontend-build:
+    name: Frontend
+    needs: e2e-tests
+    uses: ./.github/workflows/frontend-build.yml
+
+  # ...
+
+  pipeline-success:
+    name: Pipeline success
+    needs:
+      [
+        frontend-vulnerability-check,
+        backend-vulnerability-check,
+        backend-sast-check,
+        frontend-lint-format-check,
+        backend-lint-format-check,
+        frontend-unit-tests,
+        backend-unit-tests,
+        dast-check,
+        backend-integration-tests,
+        e2e-tests,
+        frontend-build
+      ]
+    runs-on: ubuntu-latest
+    if: always()
+
+# ...
+```
+
+This integrates the frontend build process into your main workflow. By adding `frontend-build` to the `pipeline-success` job's `needs` array, you ensure that the final success status depends on the build completing successfully alongside your tests and security checks.
