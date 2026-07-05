@@ -2064,7 +2064,7 @@ jobs:
             set -e
 
             echo "Restarting FastAPI backend service..."
-            if sudo supervisorctl restart imadsaddik_com; then
+            if sudo supervisorctl restart all; then
               echo "FastAPI backend restarted successfully."
             else
               echo "Error: Failed to restart FastAPI backend."
@@ -2073,11 +2073,11 @@ jobs:
 
             # Verify the service is running
             sleep 5
-            if sudo supervisorctl status imadsaddik_com | grep -q "RUNNING"; then
+            if sudo supervisorctl status all | grep -q "RUNNING"; then
               echo "FastAPI backend is running."
             else
               echo "Error: FastAPI backend failed to start properly."
-              sudo supervisorctl status imadsaddik_com
+              sudo supervisorctl status all
               exit 1
             fi
 
@@ -2250,10 +2250,10 @@ If the new installation fails at any point, the script catches the error and ins
     script: |
       # ...
 
-      sudo supervisorctl restart imadsaddik_com
+      sudo supervisorctl restart all
       
       sleep 5
-      if sudo supervisorctl status imadsaddik_com | grep -q "RUNNING"; then
+      if sudo supervisorctl status all | grep -q "RUNNING"; then
         echo "FastAPI backend is running."
       else
         exit 1
