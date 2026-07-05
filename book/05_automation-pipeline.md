@@ -1761,6 +1761,10 @@ frontend/dist/analytics.html
 
 backend/venv/
 backend/__pycache__/
+backend/logs/
+backend/gunicorn_start
+backend/gunicorn.sock
+backend/gunicorn.ctl
 backend/visitors.db
 ```
 
