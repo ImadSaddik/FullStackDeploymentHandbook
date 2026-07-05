@@ -1726,7 +1726,7 @@ sudo visudo
 Scroll to the very bottom of the file and add this line:
 
 ```text
-<your_username> ALL=(ALL) NOPASSWD: /usr/bin/systemctl reload nginx, /usr/bin/supervisorctl restart all, /usr/local/bin/clean_backups.sh
+<your_username> ALL=(ALL) NOPASSWD: /usr/sbin/nginx, /usr/bin/systemctl reload nginx, /usr/bin/supervisorctl restart all, /usr/bin/supervisorctl status all, /usr/local/bin/clean_backups.sh
 ```
 
 > [!NOTE]
