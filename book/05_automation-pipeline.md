@@ -1777,6 +1777,9 @@ Let's look at why we are ignoring these specific files:
 
 Make sure to commit this file and push it to your `master` branch. With this safeguard in place, your data is protected no matter how many times you deploy.
 
+> [!NOTE]
+> This is the content of the `rsync_exclude.txt` file I use for my own website, but feel free to modify it to fit your project. The important part is protecting your live database and backup folders from being deleted.
+
 ### Configure GitHub environments and secrets
 
 Your pipeline needs a safe way to log in to your DigitalOcean server. You also want an extra layer of protection so nobody can deploy code by mistake. You can do both by setting up a GitHub environment and storing your sensitive information as secrets.
@@ -1823,6 +1826,9 @@ If you do not have a dedicated SSH key for GitHub yet, you can create one quickl
 ```bash
 ssh-keygen -t rsa -b 4096 -f ~/.ssh/github_actions_key -C "github_actions"
 ```
+
+> [!TIP]
+> The `-f` flag specifies the filename for your new key, preventing it from overwriting your default keys. The `-C` flag adds an internal text comment.
 
 > [!NOTE]
 > When you run this command, it will ask you to create a passphrase. Just press `Enter` to skip it. Because this key is for an automated pipeline, the system needs to use it in the background without human intervention. If you add a passphrase, the pipeline will get stuck waiting for someone to type it in, causing your deployment to fail.
