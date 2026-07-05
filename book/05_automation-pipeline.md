@@ -1703,7 +1703,7 @@ clean_old_files "/web_app/backups"
 clean_old_files "/var/lib/meilisearch/dumps"
 ```
 
-Let's break down how this works. The script takes one argument which is the number of backups to keep. It calculates an offset and then calls a function named `clean_old_files` to do handle the cleanup. This function lists all files ordered by time, skips the most recent ones using `tail`, and deletes the rest.
+Let's break down how this works. The script takes one argument which is the number of backups to keep. It calculates an offset and then calls a function named `clean_old_files` to handle the cleanup. This function lists all files ordered by time, skips the most recent ones using `tail`, and deletes the rest.
 
 Make the script executable so it can be run by your pipeline:
 
