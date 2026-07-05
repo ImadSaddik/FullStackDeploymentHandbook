@@ -1976,7 +1976,6 @@ jobs:
               exit 1
             fi
 
-            # 4. Rolling Retention
             echo "Cleaning old backups..."
             sudo /usr/local/bin/clean_backups.sh $BACKUP_RETENTION_COUNT
             echo "Backup process finished successfully."
@@ -2046,27 +2045,6 @@ jobs:
               exit 1
             fi
             deactivate
-
-            echo "Copying custom files from backup venv..."
-            # Copy gunicorn_start script
-            if [ -f "venv_backup/bin/gunicorn_start" ]; then
-              cp venv_backup/bin/gunicorn_start venv/bin/gunicorn_start
-              chmod +x venv/bin/gunicorn_start
-              echo "Copied gunicorn_start script."
-            fi
-
-            # Copy logs directory (preserve existing logs)
-            if [ -d "venv_backup/logs" ]; then
-              cp -r venv_backup/logs venv/
-              echo "Copied logs directory."
-            else
-              mkdir -p venv/logs
-              echo "Created new logs directory."
-            fi
-
-            # Create run directory for socket file
-            mkdir -p venv/run
-            echo "Created run directory for socket."
 
             # Clean up backup after successful deploy
             if [ -d "venv_backup" ]; then
