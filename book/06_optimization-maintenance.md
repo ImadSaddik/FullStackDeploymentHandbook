@@ -454,3 +454,59 @@ The program will take a moment to scan your storage blocks. Once it finishes, it
 _NCDU allows you to navigate your server folders using your arrow keys to quickly identify large directories._
 
 You can press `Enter` to open folders or press `?` to open the help menu. If you locate a large, unneeded file (like an old manual zip backup), you can delete it on the spot by highlighting it and pressing `d`.
+
+### Manage log accumulation and retention
+
+Now that you can navigate your file system, you must establish strict storage boundaries for background operations.
+
+#### Enforce systemd journal limits
+
+By default, Ubuntu allows system logs managed by the `systemd-journald` daemon to consume up to 10% of your total disk volume. On a small server, this can eat up to 1GB or more of valuable space.
+
+You can restrict this storage limit manually. Open the logging configuration file:
+
+```bash
+sudo nano /etc/systemd/journald.conf
+```
+
+Locate the line `#SystemMaxUse=`. Remove the comment symbol (`#`) and set the absolute threshold to `100M`:
+
+```text
+SystemMaxUse=100M
+```
+
+Save and exit the file. Restart the internal logging service to apply the new memory restriction:
+
+```bash
+sudo systemctl restart systemd-journald
+```
+
+Your system daemon will now automatically enforce this boundary, rotating out oldest entries before they can push past your 100MB allocation.
+
+#### Configure Nginx log rotation for analytics
+
+While system logs should be kept small, your Nginx access logs are highly valuable for your GoAccess traffic charts. By default, Ubuntu rotates Nginx log files every day but deletes them after only 14 days. This means you lose your historical user traffic metrics every two weeks.
+
+To keep a full year of web history safely on disk, modify the Nginx log rotation policy:
+
+```bash
+sudo nano /etc/logrotate.d/nginx
+```
+
+Locate the line that states `rotate 14`. Change that value to `365`:
+
+```nginx
+/var/log/nginx/*.log {
+        daily
+        missingok
+        rotate 365
+        compress
+        delaycompress
+        notifempty
+        create 0640 www-data adm
+        sharedscripts
+        # ...
+}
+```
+
+Save and close the editor. The operating system will now automatically archive, compress, and store your daily traffic statistics for a full year.
