@@ -165,3 +165,109 @@ When running a full stack on a small VM with only 512MB or 1GB of RAM, you shoul
 
 * **The memory map (Left):** If your RAM fills up with active processes, the Linux kernel will start moving inactive, cold memory pages into your slower swap file to protect the system from running out of memory.
 * **The process tree (Right):** This panel displays your active applications sorted by resource footprint. You can easily watch your `meilisearch` instance and clustered Python `gunicorn` worker processes to check for abnormal memory growth or CPU spikes.
+
+### Identify and ban persistent outliers
+
+Now that you have full observability over your traffic and system resources, you can use these tools together to defend your infrastructure.
+
+If you look closely at your GoAccess dashboard under the **Requested files (URLs)** panel, you will often spot continuous requests for paths like `/wp-login.php`, `/admin/config.php`, or `/new.php`. Because your application is built on FastAPI and Vue, these files do not exist on your file system. These requests are sent by automated malicious bots scanning the open internet for known security flaws.
+
+While your Nginx configuration safely drops these scans with a 404 response, these bots still consume memory, compete for network sockets, and clutter your logs. When a persistent scraper targets your application, you should step in and block it completely at the network edge.
+
+#### Pinpoint the top offenders
+
+Finding a single malicious IP address out of thousands of log lines can be difficult. You can automate this process by writing a short Python script that parses your GoAccess JSON records to highlight extreme traffic anomalies.
+
+First, export your current dashboard statistics into a raw data file:
+
+```bash
+sudo goaccess /var/log/nginx/<your_domain>-access.log -o /web_app/goaccess.json --log-format=COMBINED
+```
+
+Create a diagnostic script inside your project root:
+
+```bash
+nano /web_app/find_bad_actors.py
+```
+
+Paste the following code:
+
+```python
+import json
+import sys
+
+try:
+    with open('/web_app/goaccess.json', 'r') as f:
+        data = json.load(f)
+except FileNotFoundError:
+    print("Error: Could not find goaccess.json file.")
+    sys.exit(1)
+
+hosts = data.get('hosts', {}).get('data', [])
+
+print(f"{'IP Address':<20} {'Total Hits':<15} {'Traffic Share':<15}")
+print("-" * 50)
+
+for host in hosts[:10]:
+    ip = host.get('data')
+    hits = host.get('hits', {}).get('count', 0)
+    percent = host.get('hits', {}).get('percent', "0.00%")
+    print(f"{ip:<20} {hits:<15} {percent:<15}")
+
+print("-" * 50)
+print("Review Checklist:")
+print("Look for severe traffic imbalances (outliers). If the top IP has")
+print("thousands of hits while others have fewer than 50, block it.")
+```
+
+Run the parser script:
+
+```bash
+python3 /web_app/find_bad_actors.py
+```
+
+The script will parse the log data and output a clean list of your top traffic sources:
+
+```text
+IP Address           Total Hits      Traffic Share  
+--------------------------------------------------
+45.148.10.246        5542            35.84%         
+4.230.26.9           370             2.39%          
+4.189.112.79         252             1.63%          
+--------------------------------------------------
+```
+
+> [!WARNING]
+> Do not ban entries blindly. Analyze your data carefully for extreme **outliers**. In the diagnostic report above, the top IP address accounts for over 35% of all server traffic, while the second entry drops down to a normal baseline. The top address is clearly an automated scanner, whereas the lower entries represent legitimate human activity.
+
+#### Block attackers at the firewall level
+
+Once you isolate a clear outlier IP address, you can use **UFW** to drop the traffic immediately. This action blocks the attacker at the network layer, preventing their packets from reaching Nginx or consuming your application's resources.
+
+Run the firewall block command:
+
+```bash
+sudo ufw deny from 45.148.10.246 to any
+```
+
+Verify that the new network barrier is active:
+
+```bash
+sudo ufw status
+```
+
+Your system firewall rule table will update to confirm the block:
+
+```text
+Status: active
+
+To                         Action      From
+--                         ------      ----
+Nginx Full                 ALLOW       Anywhere                  
+OpenSSH                    ALLOW       Anywhere                  
+Anywhere                   DENY        45.148.10.246             
+Nginx Full (v6)            ALLOW       Anywhere (v6)             
+OpenSSH (v6)               ALLOW       Anywhere (v6)             
+```
+
+The server will now actively drop all connection attempts from that specific source on sight.
