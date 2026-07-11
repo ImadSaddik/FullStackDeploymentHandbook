@@ -277,3 +277,13 @@ The server will now actively drop all connection attempts from that specific sou
 Your server infrastructure is fully secure, automated, and observable. You can track user traffic natively, monitor hardware limits in real time, and block network attackers cleanly.
 
 In the upcoming subchapter, **Chapter 6.2: Reliability**, you will put your server under stress to see how it performs under load. You will learn how to simulate real user traffic using Locust, optimize your Nginx log rotation configurations for long-term data collection, and write an automated cleanup script to prevent system logs and caches from filling up your disk space.
+
+## Reliability
+
+### Introduction
+
+Observing a quiet, idling server over SSH gives you a good baseline, but it does not tell you how your system will behave when real users hit your website. You do not want to find out that your application crashes under pressure on the day your project goes viral.
+
+In this subchapter, you will bridge the gap between staging stability and production reliability. You will learn how to load test your FastAPI backend from your local machine using **Locust**, proving exactly how much traffic your setup can handle.
+
+After validating performance, you will configure long-term reliability safeguards on your production server. You will modify **Nginx log rotation rules** to safely preserve your historical traffic data, use **NCDU** to analyze disk space, and deploy a **monthly automated cleanup script** to keep system logs and package caches from exhausting your server's disk space.
