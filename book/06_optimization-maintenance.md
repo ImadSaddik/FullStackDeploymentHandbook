@@ -113,3 +113,55 @@ Here is exactly what this command is doing:
 * `zgrep -h .`: The `zgrep` utility allows Linux to search inside compressed files without wasting time decompressing them to disk first. The `*` wildcard tells it to look at both your current log file and your old `.gz` backups.
 * `|` (Pipe): Passes the entire historical data stream directly into GoAccess.
 * `-` (Dash): Tells GoAccess to read the incoming log data from standard input instead of opening a physical file path.
+
+### Monitor system resources with Btop
+
+With your traffic analytics active, you now need to monitor the resource performance of your server. Running a full stack of Nginx, FastAPI, and Meilisearch inside a low-RAM environment leaves very little room for error.
+
+Ubuntu includes a classic monitor called `top`, but it is text-heavy and difficult to read at a glance. You will install [Btop](https://github.com/aristocratos/btop), a modern, terminal-based resource monitor that visualizes your processes, memory trees, and CPU states cleanly.
+
+Download the standalone precompiled binary directly from the official repository:
+
+```bash
+wget https://github.com/aristocratos/btop/releases/download/v1.4.0/btop-x86_64-linux-musl.tbz
+```
+
+> [!NOTE]
+> The command downloads Btop version 1.4.0 for 64-bit Linux systems. Check the [Btop releases page](https://github.com/aristocratos/btop/releases) to find the latest version or packages for other hardware architectures.
+
+Extract the compressed file:
+
+```bash
+tar -xjf btop-x86_64-linux-musl.tbz
+```
+
+Move into the extracted directory and install the tool globally:
+
+```bash
+cd btop
+sudo make install
+```
+
+By default, standard Linux security boundaries prevent non-root processes from reading low-level hardware sensors like power usage or detailed CPU core metrics. Grant Btop direct sensor access by setting system capabilities on the binary:
+
+```bash
+sudo make setcap
+```
+
+Now, return to your main directory, clean up the installer files, and launch Btop:
+
+```bash
+cd ..
+rm -rf btop btop-x86_64-linux-musl.tbz
+btop
+```
+
+The terminal will switch into a dynamic dashboard displaying your server's performance metrics.
+
+![btop terminal system monitor showing low resource usage, displaying CPU activity, memory consumption at 52%, disk utilization, network traffic graphs, and a running process tree layout.](./images/6_1_3_btop_dashboard.png)
+_The Btop interface visualizes CPU load, memory utilization, and active process hierarchies simultaneously._
+
+When running a full stack on a small VM with only 512MB or 1GB of RAM, you should closely watch these specific indicators:
+
+* **The memory map (Left):** If your RAM fills up with active processes, the Linux kernel will start moving inactive, cold memory pages into your slower swap file to protect the system from running out of memory.
+* **The process tree (Right):** This panel displays your active applications sorted by resource footprint. You can easily watch your `meilisearch` instance and clustered Python `gunicorn` worker processes to check for abnormal memory growth or CPU spikes.
