@@ -429,3 +429,28 @@ The average API response remained around 75ms. You might see occasional spikes u
 
 ![A line chart from a performance test showing response times in milliseconds over time, featuring a stable 50th percentile and a prominent spike in the 95th percentile around 9:01:00 AM marked by a white arrow.](./images/6_2_2_locust_response_times.png)
 _An example of a spike in the response times plot._
+
+### Analyze disk space with NCDU
+
+Production load tests create logs. Over time, those log directories, database backups, and software caches grow quietly until they consume all available storage space. If a Linux system hits 100% disk utilization, background services can no longer write files, causing your database to lock and crash instantly.
+
+Before you clean up your file system, you need to locate where your data is hiding. Finding heavy directories manually using standard commands like `du -h` is slow and frustrating. Instead, you will use [NCDU](https://dev.yorhel.nl/ncdu) (NCurses Disk Usage), an interactive terminal disk usage analyzer.
+
+Install the tool on your server:
+
+```bash
+sudo apt install ncdu -y
+```
+
+Launch a full scan starting right at the root directory:
+
+```bash
+sudo ncdu /
+```
+
+The program will take a moment to scan your storage blocks. Once it finishes, it will display an interactive file tree sorted by size.
+
+![ncdu disk usage analyzer interface inside a Linux terminal displaying the root directory size distribution, with a total disk usage of 7.0 GiB.](./images/6_2_3_ncdu_disk_usage.png)
+_NCDU allows you to navigate your server folders using your arrow keys to quickly identify large directories._
+
+You can press `Enter` to open folders or press `?` to open the help menu. If you locate a large, unneeded file (like an old manual zip backup), you can delete it on the spot by highlighting it and pressing `d`.
