@@ -89,3 +89,27 @@ Open your browser and navigate to `https://<your_domain>.com/analytics.html`. Th
 
 ![GoAccess HTML report dashboard showing web traffic analysis from July 5 to July 11, 2026, featuring overview metrics, a unique visitors per day line chart, and an Autonomous System Numbers (ASN) bar chart.](./images/6_1_2_go_access_html_page.png)
 _The secure GoAccess HTML dashboard displaying interactive charts and detailed request metrics._
+
+### Log rotation and automation
+
+The HTML report you just generated is static. It only shows data captured up to the exact second you ran the command. To keep it accurate, you need to automate the compilation process.
+
+Furthermore, Linux systems use a mechanism called log rotation ([logrotate](https://linux.die.net/man/8/logrotate)) to prevent files from growing indefinitely. Every night, the system compresses yesterday's Nginx logs into a separate file ending in `.gz`. If your script only reads the active text log, your web dashboard will reset to zero every morning.
+
+To fix both issues, you will create an automated cron job that pipes your active and compressed logs directly into GoAccess:
+
+```bash
+sudo crontab -e
+```
+
+Go to the bottom of the cron file and add this entry to rebuild the dashboard every hour on the hour:
+
+```text
+0 * * * * zgrep -h . /var/log/nginx/<your_domain>-access.log* | goaccess - -o /web_app/frontend/dist/analytics.html --log-format=COMBINED
+```
+
+Here is exactly what this command is doing:
+
+* `zgrep -h .`: The `zgrep` utility allows Linux to search inside compressed files without wasting time decompressing them to disk first. The `*` wildcard tells it to look at both your current log file and your old `.gz` backups.
+* `|` (Pipe): Passes the entire historical data stream directly into GoAccess.
+* `-` (Dash): Tells GoAccess to read the incoming log data from standard input instead of opening a physical file path.
