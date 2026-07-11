@@ -560,3 +560,9 @@ Navigate to the bottom of the file and add this cron expression:
 ```
 
 This configuration line states: "At exactly 3:00 AM (`0 3`), on the 1st day of every month (`1 * *`), run the cleanup script and record its outputs inside `/var/log/cleanup.log`."
+
+### What is next?
+
+Your server infrastructure is fully secure, automated, and observable. You can track user traffic natively, monitor hardware limits in real time, and block network attackers cleanly.
+
+In the final subchapter, **Chapter 6.3: Continuous security**, we will finalize our book by implementing a thorough daily security defensive system. You will learn how to build a scheduled pipeline using GitHub Actions to run an in-depth dynamic security scan overnight. This automated check prevents configuration drift or new features from leaving your production system vulnerable.
