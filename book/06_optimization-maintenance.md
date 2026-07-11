@@ -37,3 +37,55 @@ You can navigate this dashboard using your arrow keys, press `Tab` to shift betw
 * **Requested files:** Shows exactly which URL endpoints are drawing traffic.
 * **Static assets:** Isolates image, CSS, and JS file requests from application logic.
 * **HTTP status codes:** Highlights server anomalies, such as tracking how often users hit 404 or 500 errors.
+
+### Build a secure web dashboard
+
+While a terminal interface is highly efficient for quick checks over SSH, you might prefer a visual dashboard accessible from a web browser. GoAccess can generate a clean, standalone HTML dashboard. However, since this dashboard displays internal server traffic patterns, you must protect it so the public cannot access it.
+
+You will use HTTP basic authentication to lock down the file. First, install the utility suite containing the password generation tools:
+
+```bash
+sudo apt install apache2-utils -y
+```
+
+Now, generate an encrypted password file. You will place it inside the secure Nginx configuration directory:
+
+```bash
+sudo htpasswd -c /etc/nginx/.htpasswd admin
+```
+
+The system will prompt you to enter and verify a strong password for your `admin` user.
+
+Next, open your primary Nginx server configuration file to create a routing rule for your analytics file:
+
+```bash
+sudo nano /etc/nginx/sites-available/<your_domain>.com
+```
+
+Locate your secure, port 443 `server` block. Paste this location directive right above your general SPA fallback routes:
+
+```nginx
+location = /analytics.html {
+    root /web_app/frontend/dist;
+    auth_basic "Restricted Area";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+}
+```
+
+Save the file and exit the editor. Test the configuration structure and reload the server to apply the authentication block:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Now, manually trigger GoAccess to compile your current access log data into a static HTML report placed inside your frontend distribution folder:
+
+```bash
+sudo goaccess /var/log/nginx/<your_domain>-access.log -o /web_app/frontend/dist/analytics.html --log-format=COMBINED
+```
+
+Open your browser and navigate to `https://<your_domain>.com/analytics.html`. The browser will instantly pause and prompt you for your username and password. Enter your credentials to access the full graphical dashboard interface.
+
+![GoAccess HTML report dashboard showing web traffic analysis from July 5 to July 11, 2026, featuring overview metrics, a unique visitors per day line chart, and an Autonomous System Numbers (ASN) bar chart.](./images/6_1_2_go_access_html_page.png)
+_The secure GoAccess HTML dashboard displaying interactive charts and detailed request metrics._
