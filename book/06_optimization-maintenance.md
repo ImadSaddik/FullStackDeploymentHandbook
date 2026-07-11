@@ -510,3 +510,53 @@ Locate the line that states `rotate 14`. Change that value to `365`:
 ```
 
 Save and close the editor. The operating system will now automatically archive, compress, and store your daily traffic statistics for a full year.
+
+### Automated monthly cleanup script
+
+To keep your server reliable without requiring continuous manual maintenance, you can write an automated routine to flush stale caches and packages.
+
+Create a new dedicated bash script:
+
+```bash
+sudo nano /usr/local/bin/monthly_cleanup.sh
+```
+
+Paste the following system maintenance script:
+
+```bash
+#!/bin/bash
+# Enforce immediate termination if any step encounters an unhandled error
+set -e
+
+echo "Starting automated system cleanup routine"
+
+apt-get clean
+apt-get autoremove -y
+
+journalctl --vacuum-time=2d
+
+rm -rf /home/*/.cache/pip
+rm -rf /home/*/.local/share/pnpm/store
+
+echo "System cleanup completed successfully."
+```
+
+Save and close the file. Make the cleanup script executable:
+
+```bash
+sudo chmod +x /usr/local/bin/monthly_cleanup.sh
+```
+
+Now, add this script to the root user's crontab:
+
+```bash
+sudo crontab -e
+```
+
+Navigate to the bottom of the file and add this cron expression:
+
+```text
+0 3 1 * * /usr/local/bin/monthly_cleanup.sh >> /var/log/cleanup.log 2>&1
+```
+
+This configuration line states: "At exactly 3:00 AM (`0 3`), on the 1st day of every month (`1 * *`), run the cleanup script and record its outputs inside `/var/log/cleanup.log`."
