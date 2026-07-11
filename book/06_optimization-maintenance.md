@@ -271,3 +271,9 @@ OpenSSH (v6)               ALLOW       Anywhere (v6)
 ```
 
 The server will now actively drop all connection attempts from that specific source on sight.
+
+### What is next?
+
+Your server infrastructure is fully secure, automated, and observable. You can track user traffic natively, monitor hardware limits in real time, and block network attackers cleanly.
+
+In the upcoming subchapter, **Chapter 6.2: Reliability**, you will put your server under stress to see how it performs under load. You will learn how to simulate real user traffic using Locust, optimize your Nginx log rotation configurations for long-term data collection, and write an automated cleanup script to prevent system logs and caches from filling up your disk space.
