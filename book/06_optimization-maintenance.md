@@ -287,3 +287,145 @@ Observing a quiet, idling server over SSH gives you a good baseline, but it does
 In this subchapter, you will bridge the gap between staging stability and production reliability. You will learn how to load test your FastAPI backend from your local machine using **Locust**, proving exactly how much traffic your setup can handle.
 
 After validating performance, you will configure long-term reliability safeguards on your production server. You will modify **Nginx log rotation rules** to safely preserve your historical traffic data, use **NCDU** to analyze disk space, and deploy a **monthly automated cleanup script** to keep system logs and package caches from exhausting your server's disk space.
+
+### Load testing with Locust
+
+To understand your server's limits, you need to simulate traffic. You will use [Locust](https://github.com/locustio/locust), an open-source load testing tool written in Python. It allows you to write clean Python scripts that define exactly what a user does, such as browsing the homepage, waiting a few seconds, or triggering a heavy API search query.
+
+#### Install Locust locally
+
+Always run your load testing tool **from your local computer**, never from the production server itself. Running a massive load test directly on the server will consume its CPU and distort your performance metrics.
+
+Activate your local Python virtual environment and install Locust:
+
+```bash
+pip install locust
+```
+
+#### Create the test scenario
+
+Create a new file named `locustfile.py` inside your local directory at `backend/tests/load/`.
+
+This script simulates a realistic distribution of user actions, focusing heavily on your application's most resource-intensive operations, such as complex search queries.
+
+Paste the following configuration into your file:
+
+```python
+import random
+
+
+from locust import FastHttpUser, between, task
+
+class WebsiteUser(FastHttpUser):
+    # Simulate a realistic human delay between tasks (1 to 5 seconds)
+    wait_time = between(1, 5)
+    
+    search_queries = ["inkscape", "python", "meilisearch", "astronomy", "elasticsearch"]
+    article_types = ["blog-post", "course-post", "astronomy-post"]
+    sort_fields = ["date", "popularity", "engagement", "claps"]
+    sort_orders = ["asc", "desc"]
+
+    @task(1)
+    def get_article_claps_count(self):
+        article_name = "ElasticsearchChangeHeapSize"
+        endpoint = f"/api/articles/{article_name}/claps-count"
+        self.client.get(endpoint, name="/articles/[name]/claps-count")
+
+    @task(4)
+    def view_homepage(self):
+        self.client.get("/", name="/")
+
+    @task(7)
+    def get_latest_articles(self):
+        endpoint = "/api/articles/latest"
+        article_type = random.choice(self.article_types)
+        payload = {"articleType": article_type}
+        self.client.post(endpoint, json=payload, name=endpoint)
+
+    @task(7)
+    def get_recommendations(self):
+        endpoint = "/api/articles/recommendations"
+        payload = {
+            "articleType": "blog-post",
+            "documentNameToIgnore": "ElasticsearchChangeHeapSize",
+            "documentTags": ["elasticsearch"],
+        }
+        self.client.post(endpoint, json=payload, name=endpoint)
+
+    @task(10)
+    def search_articles(self):
+        endpoint = "/api/search"
+        query = random.choice(self.search_queries)
+        article_type = random.choice(self.article_types)
+        sort_field = random.choice(self.sort_fields)
+        sort_order = random.choice(self.sort_orders)
+
+        payload = {
+            "query": query,
+            "articleType": article_type,
+            "size": 10,
+            "sortBy": {"field": sort_field, "order": sort_order},
+        }
+        self.client.post(endpoint, json=payload, name=endpoint)
+
+```
+
+We intentionally inherit from `FastHttpUser` instead of the standard `HttpUser`. `FastHttpUser` utilizes a fast, C-based HTTP client layer named [geventhttpclient](https://github.com/geventhttpclient/geventhttpclient) rather than the standard Python requests library. This reduces your local machine's CPU overhead during execution, increasing your testing capacity by up to 5x to 6x on standard laptop hardware.
+
+#### Execute the performance test
+
+Navigate to the directory where you saved your file and start Locust:
+
+```bash
+locust
+```
+
+The tool will launch its web interface on port 8089:
+
+```text
+Starting web interface at http://0.0.0.0:8089, press enter to open your default browser.
+```
+
+Open your local web browser and navigate to [http://localhost:8089](http://localhost:8089).
+
+You need to fill in a few fields before starting the test:
+
+1. **Number of users:** Enter `50`. For a baseline server running on a minimal plan, 50 concurrent users executing tasks simultaneously is a substantial traffic load.
+2. **Spawn rate:** Enter `5`. This adds 5 new simulated users every second until the test reaches your maximum total of 50.
+3. **Host:** Enter your production domain name: `https://<your_domain>.com`.
+
+Click the **Start** button.
+
+![Locust load testing web interface configured to start a new load test, displaying form fields for peak concurrency, spawn rate, and target host configuration.](./images/6_2_1_locust_dashboard.png)
+_Configure your target users, ramp-up speeds, and production URL inside the Locust web portal._
+
+#### Evaluate system behavior under load
+
+While your local computer drives a high volume of traffic to your server, look at your metrics panels:
+
+* **Locust dashboard:** Track your Requests Per Second (RPS) and monitor the **Failures** column. If you start seeing `502 Bad Gateway` errors, it means Nginx is timing out because your FastAPI or Gunicorn backend queue is completely full.
+* **Btop monitor:** Open a separate terminal, SSH into your production server, and open `btop`. Watch your CPU cores and swap memory blocks. If the CPU locks at 100%, your current Gunicorn worker cluster is fully saturated.
+
+> [!IMPORTANT]
+> Do not run load tests continuously for hours against your cloud instances. Your server provider may flag the massive, sustained traffic spike as an attack or an outgoing DDoS event. Run the test for 5 to 10 minutes to compile your performance metrics, then click the **Stop** button.
+
+#### Performance data review
+
+After running a test for 5 minutes against a standard minimal cloud instance, the data reveals how well your architecture scales:
+
+```text
+Type     Name                            # reqs      # fails    Avg (ms)   Max (ms)    RPS
+--------------------------------------------------------------------------------------------
+GET      /                                 1124           0         64        210   3.20
+POST     /api/articles/latest              1945           0         78        340   5.50
+POST     /api/search                       2499           0         72       1100   7.10
+--------------------------------------------------------------------------------------------
+Total                                      5568           0         71       1100  15.80
+```
+
+The system successfully sustained nearly 16 Requests Per Second without dropping a single packet (0 failures). This processing speed handles roughly **1.3 million requests per day** if sustained continuously.
+
+The average API response remained around 75ms. You might see occasional spikes up to 1100ms on your most expensive routes, such as `/api/search`. Do not worry about rare spikes; this is classic [tail latency](https://andrewpakhomov.com/posts/latency-tail-latency-and-response-time-in-distributed-systems/). It typically occurs when the operating system triggers brief, non-blocking internal tasks like log rotation writes or language garbage collection routines. As long as your median (50th percentile) and 95th percentile metrics remain low, your site will feel lightning-fast to your readers.
+
+![A line chart from a performance test showing response times in milliseconds over time, featuring a stable 50th percentile and a prominent spike in the 95th percentile around 9:01:00 AM marked by a white arrow.](./images/6_2_2_locust_response_times.png)
+_An example of a spike in the response times plot._
