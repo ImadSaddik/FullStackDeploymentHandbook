@@ -1,4 +1,4 @@
-# Full stack deployment handbook
+# Full stack deployment book
 
 WIP
 
