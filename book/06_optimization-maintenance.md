@@ -566,3 +566,15 @@ This configuration line states: "At exactly 3:00 AM (`0 3`), on the 1st day of e
 Your server infrastructure is fully secure, automated, and observable. You can track user traffic natively, monitor hardware limits in real time, and block network attackers cleanly.
 
 In the final subchapter, **Chapter 6.3: Continuous security**, we will finalize our book by implementing a thorough daily security defensive system. You will learn how to build a scheduled pipeline using GitHub Actions to run an in-depth dynamic security scan overnight. This automated check prevents configuration drift or new features from leaving your production system vulnerable.
+
+## Continuous security
+
+### Introduction
+
+In Module 5, you integrated security guardrails into your pull request pipeline by shifting security testing left. You used `pip-audit` and `pnpm audit` to check dependencies, Bandit to scan source code syntax, and a lightweight OWASP ZAP API scan to verify your backend endpoints.
+
+However, checking only code syntax or raw API definitions leaves a major blind spot by ignoring the live frontend user interface. A production full-stack application includes complex inter-service dependencies, client-side data routing, and static file previews.
+
+To evaluate the entire system as a cohesive unit, you need a thorough Dynamic Application Security Testing (DAST) analysis. Because a full dynamic scan actively crawls your web pages, builds page graphs, and tests thousands of exploit vectors, executing it on every Git commit is impractical. Doing so would slow your development pipeline significantly.
+
+The industry standard for solving this is to run a scheduled, independent security scan. In this final chapter, you will build an automated GitHub Actions pipeline that boots your entire application stack (including a live Meilisearch instance, a FastAPI server, and a compiled production Vue frontend preview) overnight. You will wire this environment to an active OWASP ZAP full scan routine to check that your code remains secure against emerging exploits.
