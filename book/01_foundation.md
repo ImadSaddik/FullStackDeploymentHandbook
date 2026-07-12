@@ -18,7 +18,7 @@ By the end of this section, you will have a server running Ubuntu 24.04 LTS, acc
 
 ### Create the project
 
-In this handbook, we use DigitalOcean to host your web application. If you don’t have an account, [create one here](https://m.do.co/c/4f9010fc5eb3) to get **$200 in free credit**.
+In this book, we use DigitalOcean to host your web application. If you don’t have an account, [create one here](https://m.do.co/c/4f9010fc5eb3) to get **$200 in free credit**.
 
 After creating your account, create a project to hold your resources. Click on the **New project** button.
 
