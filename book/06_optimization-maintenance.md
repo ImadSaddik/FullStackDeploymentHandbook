@@ -578,3 +578,206 @@ However, checking only code syntax or raw API definitions leaves a major blind s
 To evaluate the entire system as a cohesive unit, you need a thorough Dynamic Application Security Testing (DAST) analysis. Because a full dynamic scan actively crawls your web pages, builds page graphs, and tests thousands of exploit vectors, executing it on every Git commit is impractical. Doing so would slow your development pipeline significantly.
 
 The industry standard for solving this is to run a scheduled, independent security scan. In this final chapter, you will build an automated GitHub Actions pipeline that boots your entire application stack (including a live Meilisearch instance, a FastAPI server, and a compiled production Vue frontend preview) overnight. You will wire this environment to an active OWASP ZAP full scan routine to check that your code remains secure against emerging exploits.
+
+### The automated deep-scan workflow
+
+To run a full web scanner, the testing environment must mirror your production setup. The workflow must start Meilisearch in the background, wait for its network status check, spawn your Uvicorn processes, compile your frontend assets, and run a local web server to serve the compiled frontend.
+
+Create a new workflow configuration file at `.github/workflows/daily-deep-security-scan.yml`:
+
+```yaml
+name: Daily deep security scan (DAST)
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  deep_scan:
+    name: Full OWASP ZAP scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MEILISEARCH_MASTER_KEY: "aStrongMasterKeyForTestingPurposes"
+      MEILISEARCH_URL: "http://localhost:7700"
+      MEILISEARCH_INDEX_NAME: "articles_test"
+      ENVIRONMENT: "development"
+      MEILISEARCH_DOWNLOAD_MAX_RETRIES: "3"
+      MEILISEARCH_DOWNLOAD_RETRY_DELAY: "5"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: pip install -r requirements.txt
+
+      - name: Download Meilisearch binary
+        working-directory: ./backend
+        run: |
+          MAX_RETRIES="${MEILISEARCH_DOWNLOAD_MAX_RETRIES}"
+          RETRY_DELAY="${MEILISEARCH_DOWNLOAD_RETRY_DELAY}"
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES to download Meilisearch..."
+            if curl -L https://install.meilisearch.com | sh; then
+              echo "Meilisearch downloaded successfully!"
+              chmod +x meilisearch
+              break
+            else
+              if [ $i -lt $MAX_RETRIES ]; then
+                echo "Download failed. Retrying in $RETRY_DELAY seconds..."
+                sleep $RETRY_DELAY
+              else
+                echo "Download failed after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Start Meilisearch
+        working-directory: ./backend
+        run: |
+          ./meilisearch --master-key="${MEILISEARCH_MASTER_KEY}" &
+          echo "Waiting for Meilisearch to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:7700/health | grep -q "available"; then
+              echo "Meilisearch is ready!"
+              break
+            fi
+            echo "Attempt $i: Meilisearch not ready yet..."
+            sleep 1
+          done
+          if ! curl -s http://localhost:7700/health | grep -q "available"; then
+            echo "Meilisearch failed to start after 30 attempts"
+            exit 1
+          fi
+
+      - name: Start backend server
+        working-directory: ./backend
+        run: |
+          uvicorn main:app --host 0.0.0.0 --port 8000 &
+          echo "Waiting for backend to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/api/health | grep -q "ok"; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Attempt $i: Backend not ready yet..."
+            sleep 1
+          done
+          if ! curl -s http://localhost:8000/api/health | grep -q "ok"; then
+            echo "Backend failed to start after 30 attempts"
+            exit 1
+          fi
+        env:
+          MEILISEARCH_URL: ${{ env.MEILISEARCH_URL }}
+          MEILISEARCH_MASTER_KEY: ${{ env.MEILISEARCH_MASTER_KEY }}
+          MEILISEARCH_INDEX_NAME: ${{ env.MEILISEARCH_INDEX_NAME }}
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+
+      - name: Seed test data
+        working-directory: ./backend
+        run: python -m tests.test_data
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: pnpm install
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: pnpm build
+
+      - name: Start frontend (Production preview)
+        working-directory: ./frontend
+        run: |
+          nohup pnpm preview --host &
+          echo "Waiting for frontend to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/ | grep -q "<title>Imad Saddik</title>"; then
+              echo "Frontend is ready!"
+              break
+            fi
+            echo "Attempt $i: Frontend not ready yet..."
+            sleep 1
+          done
+          if ! curl -s http://localhost:8080/ | grep -q "<title>Imad Saddik</title>"; then
+            echo "Frontend failed to start after 30 attempts"
+            exit 1
+          fi
+
+      - name: Run ZAP full scan
+        uses: zaproxy/action-full-scan@v0.13.0
+        with:
+          target: "http://localhost:8080"
+          rules_file_name: ".github/zap-rules.tsv"
+          allow_issue_writing: false
+          fail_action: true
+```
+
+### Analyzing the workflow execution
+
+Let's look at the differences between this scheduled pipeline and the pull request pipeline.
+
+```yaml
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+```
+
+The `schedule` block uses standard cron notation. Setting the expression to `"0 6 * * *"` triggers GitHub to start a clean runner environment every morning at 6:00 UTC. Adding `workflow_dispatch` keeps a manual execution option available in your repository interface, allowing you to run a security scan on demand.
+
+```yaml
+- name: Start frontend (Production preview)
+  working-directory: ./frontend
+  run: |
+    nohup pnpm preview --host &
+```
+
+During pull request validation, you run your frontend using a hot-reloading development server (`pnpm dev`). For an accurate analysis, however, you cannot scan raw development code. Development setups lack production performance optimizations, minified assets, and definitive routing behavior.
+
+This workflow addresses that by running `pnpm build` to compile the assets, and then calling `pnpm preview --host` in the background (`&`) using `nohup` (no hang up). This setup mirrors the actual build artifact layout that Nginx serves in production.
+
+```yaml
+for i in {1..30}; do
+  if curl -s http://localhost:8080/ | grep -q "<title>Imad Saddik</title>"; then
+    echo "Frontend is ready!"
+    break
+  fi
+  sleep 1
+done
+```
+
+Just like waiting for your backend network sockets to open, you must give your web server process time to initialize. The script runs a validation loop by checking the localhost port with `curl`, verifying that your HTML `<title>` tag is present on the page before passing control to the vulnerability scanner.
+
+```yaml
+- name: Run ZAP full scan
+  uses: zaproxy/action-full-scan@v0.13.0
+  with:
+    target: "http://localhost:8080"
+    rules_file_name: ".github/zap-rules.tsv"
+```
+
+The final action executes the DAST scan by pulling the `zaproxy/action-full-scan` container image. Rather than reading a static text file like the API check did, this container spins up an active crawler. It connects to `http://localhost:8080`, crawls every link it finds, maps your frontend components, and runs specialized fuzzing scripts against every form input and data module.
+
+By pointing the step to your existing `.github/zap-rules.tsv` configuration file, the full scan inherits your custom rule exclusions. This avoids false alerts regarding missing Nginx production security headers while maintaining strict reporting rules for cross-site scripting (XSS), SQL injections, and broken access permissions.
