@@ -14,7 +14,7 @@ I wrote this book after spending months running and refining a live production s
 
 ### Git hooks
 
-This repository uses git hooks to automatically generate `PDF`s from slides. To set them up, run:
+This repository uses git hooks to automatically build PDF files whenever presentation slides are updated. To set up the hooks, run:
 
 ```bash
 ./scripts/install-hooks.sh
