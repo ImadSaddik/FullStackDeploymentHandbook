@@ -38,3 +38,10 @@ This repository uses git hooks to automatically build PDF files whenever present
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+You can reach me through:
+
+- **Email** - [simad3647@gmail.com](mailto:simad3647@gmail.com)
+- **LinkedIn** - [Connect with me](https://www.linkedin.com/in/imadsaddik/)
