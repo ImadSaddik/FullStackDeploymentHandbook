@@ -8,6 +8,8 @@ I wrote this book after spending months running and refining a live production s
 
 ## What you will learn
 
+The book is divided into six modules, each focusing on a specific aspect of full-stack deployment:
+
 - **[Module 1: The foundation](book/01_foundation.md)** - Provisioning cloud servers, rootless user management, and SSH hardening.
 - **[Module 2: The application runtime](book/02_application-runtime.md)** - Manual stack deployment, memory swap optimization, Gunicorn process engineering, and Supervisor service management.
 - **[Module 3: Data & search](book/03_data-and-search.md)** - Self-hosting and isolating database and indexing layers securely behind server firewalls.
@@ -19,7 +21,7 @@ I wrote this book after spending months running and refining a live production s
 
 - **[book/](book/)** - Markdown files containing the full text of the book modules.
 - **[course-assets/](course-assets/)** - Presentation slides (ODF and generated PDF formats) accompanying the guide.
-- **[scripts/](scripts/)** - Helper scripts, including slide generators and image optimization tools.
+- **[scripts/](scripts/)** - Helper scripts.
 
 ## Development setup
 
