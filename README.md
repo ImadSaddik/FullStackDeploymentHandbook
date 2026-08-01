@@ -8,7 +8,7 @@ I wrote this book after spending months running and refining a live production s
 
 ### Prerequisites
 
-`LibreOffice` is required for automatically generating `PDF` slides from `ODF` files. If you don't have it installed, you can find the instructions in the [official download page](https://www.libreoffice.org/download/download-libreoffice/).
+`LibreOffice` is required for automatically generating `PDF` slides from `ODF` files. If you don't have it installed, you can find the instructions on the [official download page](https://www.libreoffice.org/download/download-libreoffice/).
 
 ### Git hooks
 
