@@ -35,6 +35,10 @@ This repository uses git hooks to automatically build PDF files whenever present
 ./scripts/install-hooks.sh
 ```
 
+## Contributing
+
+Contributions are welcome! If you find a typo, have a suggestion, or want to improve a section, feel free to open an issue or submit a pull request.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
