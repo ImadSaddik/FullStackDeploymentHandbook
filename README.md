@@ -27,6 +27,12 @@ I wrote this book after spending months running and refining a live production s
 
 `LibreOffice` is required for automatically generating `PDF` slides from `ODF` files. If you don't have it installed, you can find the instructions on the [official download page](https://www.libreoffice.org/download/download-libreoffice/).
 
+Python 3.9+ with required dependencies. Install them using:
+
+```bash
+pip install -r requirements.txt
+```
+
 ### Git hooks
 
 This repository uses git hooks to automatically build PDF files whenever presentation slides are updated. To set up the hooks, run:
@@ -34,6 +40,20 @@ This repository uses git hooks to automatically build PDF files whenever present
 ```bash
 ./scripts/install-hooks.sh
 ```
+
+### Image optimization
+
+To compress PNG images in the repository to optimized JPEGs, run:
+
+```bash
+python scripts/compress_images.py
+```
+
+Options you can pass to the script:
+
+- `--dir`: Target image directory (defaults to `images/`).
+- `--quality`: JPEG quality level (defaults to `88`).
+- `--no-remove-pngs`: Preserve original PNG files after conversion.
 
 ## Contributing
 
