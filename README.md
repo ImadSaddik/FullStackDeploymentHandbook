@@ -1,6 +1,8 @@
 # Full stack deployment book
 
-WIP
+A practical guide to setting up, securing, and automating full-stack web applications on virtual machines or bare-metal servers.
+
+I wrote this book after spending months running and refining a live production server. It walks you through building a complete web application stack, including a frontend, an API backend, databases, and search engines, on virtual machines or bare-metal servers.
 
 ## Development setup
 
